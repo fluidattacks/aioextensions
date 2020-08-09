@@ -3,6 +3,7 @@
 # Standard library
 import asyncio
 from concurrent.futures import (
+    Executor,
     ProcessPoolExecutor,
     ThreadPoolExecutor,
 )
@@ -22,7 +23,9 @@ from typing import (
     Iterable,
     Optional,
     Tuple,
+    Type,
     TypeVar,
+    Union,
 )
 
 # Third party libraries
@@ -34,50 +37,6 @@ _T = TypeVar('_T')
 
 # Linters
 # pylint: disable=unsubscriptable-object
-
-
-class ExecutorPools:
-
-    def __init__(self) -> None:
-        self._process_pool: Optional[ProcessPoolExecutor] = None
-        self._thread_pool: Optional[ThreadPoolExecutor] = None
-
-    def initialize_process_pool(
-        self,
-        *,
-        max_workers: Optional[int] = None,
-    ) -> None:
-        if self._process_pool is not None:
-            self._process_pool.shutdown(wait=False)
-
-        self._process_pool = ProcessPoolExecutor(max_workers=max_workers)
-
-    def initialize_thread_pool(
-        self,
-        *,
-        max_workers: Optional[int] = None,
-    ) -> None:
-        if self._thread_pool is not None:
-            self._thread_pool.shutdown(wait=False)
-
-        self._thread_pool = ThreadPoolExecutor(max_workers=max_workers)
-
-    @property
-    def process(self) -> ProcessPoolExecutor:
-        if self._process_pool is None:
-            raise RuntimeError('Must Call initialize_process_pool first')
-
-        return self._process_pool
-
-    @property
-    def thread(self) -> ThreadPoolExecutor:
-        if self._thread_pool is None:
-            raise RuntimeError('Must Call initialize_thread_pool first')
-
-        return self._thread_pool
-
-
-EXECUTOR_POOLS: ExecutorPools = ExecutorPools()
 
 
 def block(
@@ -96,6 +55,32 @@ def block_decorator(function: _F) -> _F:
         return block(function, *args, **kwargs)
 
     return cast(_F, wrapper)
+
+
+class ExecutorPool:
+
+    def __init__(
+        self,
+        cls: Union[
+            Type[ProcessPoolExecutor],
+            Type[ThreadPoolExecutor],
+        ],
+    ) -> None:
+        self._cls = cls
+        self._pool: Optional[Executor] = None
+
+    def initialize(self, *, max_workers: Optional[int] = None) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=False)
+
+        self._pool = self._cls(max_workers=max_workers)
+
+    @property
+    def pool(self) -> Executor:
+        if self._pool is None:
+            raise RuntimeError('Must Call initialize first')
+
+        return self._pool
 
 
 async def force_loop_cycle() -> None:
@@ -191,7 +176,7 @@ async def unblock(
 ) -> _T:
     """Execute function(*args, **kwargs) in the specified thread executor."""
     return await asyncio.get_running_loop().run_in_executor(
-        EXECUTOR_POOLS.thread, partial(function, *args, **kwargs),
+        THREAD_POOL.pool, partial(function, *args, **kwargs),
     )
 
 
@@ -202,5 +187,10 @@ async def unblock_cpu(
 ) -> _T:
     """Execute function(*args, **kwargs) in the specified process executor."""
     return await asyncio.get_running_loop().run_in_executor(
-        EXECUTOR_POOLS.process, partial(function, *args, **kwargs),
+        PROCESS_POOL.pool, partial(function, *args, **kwargs),
     )
+
+
+# Constants
+THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)
+PROCESS_POOL: ExecutorPool = ExecutorPool(ProcessPoolExecutor)

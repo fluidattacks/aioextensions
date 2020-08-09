@@ -11,8 +11,9 @@ from typing import (
 # Local libraries
 from aioextensions import (
     block_decorator,
-    EXECUTOR_POOLS,
+    PROCESS_POOL,
     resolve,
+    THREAD_POOL,
     unblock,
     unblock_cpu,
 )
@@ -42,20 +43,13 @@ async def do(n: int) -> int:
     return n
 
 
-def test_executors() -> None:
-    with suppress(RuntimeError):
-        EXECUTOR_POOLS.process
-    with suppress(RuntimeError):
-        EXECUTOR_POOLS.thread
-
-    EXECUTOR_POOLS.initialize_process_pool()
-    EXECUTOR_POOLS.initialize_thread_pool()
-
-    EXECUTOR_POOLS.process
-    EXECUTOR_POOLS.thread
-
-    EXECUTOR_POOLS.initialize_process_pool()
-    EXECUTOR_POOLS.initialize_thread_pool()
+def test_executor_pool() -> None:
+    for pool in [PROCESS_POOL, THREAD_POOL]:
+        with suppress(RuntimeError):
+            pool.pool
+        pool.initialize()
+        pool.pool
+        pool.initialize()
 
 
 @block_decorator
