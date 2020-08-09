@@ -106,7 +106,7 @@ async def force_loop_cycle() -> None:
 def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[_T]],
     *,
-    workers: int = 1,
+    workers: int = 1024,
     worker_greediness: int = 0,
 ) -> Iterable[Awaitable[_T]]:
     """Resolve concurrently the iterable of awaitables using many workers."""
@@ -156,7 +156,7 @@ def resolve(  # noqa: mccabe
 async def collect(
     awaitables: Iterable[Awaitable[_T]],
     *,
-    workers: int = 1,
+    workers: int = 1024,
     worker_greediness: int = 0,
 ) -> Tuple[_T, ...]:
     """Collect concurrently the iterable of awaitables using many workers."""
