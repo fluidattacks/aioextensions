@@ -1,5 +1,8 @@
 # Standard library
 import asyncio
+from contextlib import (
+    suppress,
+)
 from typing import (
     Any,
     List,
@@ -7,11 +10,19 @@ from typing import (
 
 # Local libraries
 from aioextensions import (
+    block_decorator,
+    EXECUTOR_POOLS,
     resolve,
+    unblock,
+    unblock_cpu,
 )
 
 
 class Error(Exception):
+    pass
+
+
+def sync() -> None:
     pass
 
 
@@ -31,7 +42,35 @@ async def do(n: int) -> int:
     return n
 
 
-async def _test_resolve(loop: asyncio.AbstractEventLoop) -> None:
+def test_executors() -> None:
+    with suppress(RuntimeError):
+        EXECUTOR_POOLS.process
+    with suppress(RuntimeError):
+        EXECUTOR_POOLS.thread
+
+    EXECUTOR_POOLS.initialize_process_pool()
+    EXECUTOR_POOLS.initialize_thread_pool()
+
+    EXECUTOR_POOLS.process
+    EXECUTOR_POOLS.thread
+
+    EXECUTOR_POOLS.initialize_process_pool()
+    EXECUTOR_POOLS.initialize_thread_pool()
+
+
+@block_decorator
+async def test_resolve() -> None:
+    loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+
+    await unblock(sync)
+    await unblock_cpu(sync)
+
+    with suppress(ValueError):
+        tuple(resolve([], workers=0))
+
+    with suppress(ValueError):
+        tuple(resolve([], greediness=-1))
+
     results: List[Any] = []
     start = loop.time()
     for x in resolve(map(do, range(5)), workers=2, greediness=4):
@@ -67,8 +106,3 @@ async def _test_resolve(loop: asyncio.AbstractEventLoop) -> None:
             results.append('catched')
     assert round(loop.time() - start, 1) == 0.4
     assert results == [0, 1, 2, 'catched', 4]
-
-
-def test_resolve() -> None:
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(_test_resolve(loop))
