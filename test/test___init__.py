@@ -11,6 +11,7 @@ from typing import (
 # Local libraries
 from aioextensions import (
     block_decorator,
+    collect,
     PROCESS_POOL,
     resolve,
     THREAD_POOL,
@@ -53,7 +54,7 @@ def test_executor_pool() -> None:
 
 
 @block_decorator
-async def test_resolve() -> None:
+async def test_collect_and_resolve() -> None:
     loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
     await unblock(sync)
@@ -63,11 +64,11 @@ async def test_resolve() -> None:
         tuple(resolve([], workers=0))
 
     with suppress(ValueError):
-        tuple(resolve([], greediness=-1))
+        tuple(resolve([], worker_greediness=-1))
 
     results: List[Any] = []
     start = loop.time()
-    for x in resolve(map(do, range(5)), workers=2, greediness=4):
+    for x in resolve(map(do, range(5)), workers=2, worker_greediness=4):
         try:
             results.append(await x)
         except Error:
@@ -84,16 +85,16 @@ async def test_resolve() -> None:
     assert results == [0, 1, 2, 'catched', 4]
 
     start = loop.time()
-    assert [0] == [await x for x in resolve([do(0)])]
+    assert (0,) == await collect([do(0)])
     assert round(loop.time() - start, 1) == 0.4
 
     start = loop.time()
-    assert [] == [x for x in resolve([])]  # type: ignore
+    assert () == await collect([])
     assert round(loop.time() - start, 1) == 0.0
 
     results = []
     start = loop.time()
-    for x in resolve(map(do, range(5)), workers=100000, greediness=1):
+    for x in resolve(map(do, range(5)), workers=100000, worker_greediness=1):
         try:
             results.append(await x)
         except Error:

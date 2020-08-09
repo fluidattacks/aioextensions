@@ -22,6 +22,7 @@ from typing import (
     Dict,
     Iterable,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -93,13 +94,13 @@ def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[_T]],
     *,
     workers: int = 1,
-    greediness: int = 0,
+    worker_greediness: int = 0,
 ) -> Iterable[Awaitable[_T]]:
     """Resolve concurrently the iterable of awaitables using many workers."""
     if workers < 1:
         raise ValueError('workers must be >= 1')
-    if greediness < 0:
-        raise ValueError('greediness must be >= 0')
+    if worker_greediness < 0:
+        raise ValueError('worker_greediness must be >= 0')
 
     loop = asyncio.get_event_loop()
     store: Dict[int, asyncio.Queue] = {}
@@ -109,7 +110,7 @@ def resolve(  # noqa: mccabe
     workers_tasks: Dict[int, asyncio.Task] = {}
 
     async def worker() -> None:
-        done: asyncio.Queue = asyncio.Queue(greediness)
+        done: asyncio.Queue = asyncio.Queue(worker_greediness)
         for index, awaitable in stream:
             store[index] = done
             future = loop.create_future()
@@ -137,6 +138,23 @@ def resolve(  # noqa: mccabe
 
     for index, _ in stream_copy:
         yield cast(Awaitable[_T], get_one(index))
+
+
+async def collect(
+    awaitables: Iterable[Awaitable[_T]],
+    *,
+    workers: int = 1,
+    worker_greediness: int = 0,
+) -> Tuple[_T, ...]:
+    """Collect concurrently the iterable of awaitables using many workers."""
+    return tuple([
+        await elem
+        for elem in resolve(
+            awaitables,
+            workers=workers,
+            worker_greediness=worker_greediness,
+        )
+    ])
 
 
 def schedule(
