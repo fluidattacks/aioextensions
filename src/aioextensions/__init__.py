@@ -44,11 +44,13 @@ def block(
     *args: Any,
     **kwargs: Any,
 ) -> _T:
+    """Execute an asynchronous function and return its result."""
     uvloop.install()
     return asyncio.run(function(*args, **kwargs))
 
 
 def block_decorator(function: _F) -> _F:
+    """Decorator to execute an asynchronous function and return its result."""
 
     @wraps(function)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
