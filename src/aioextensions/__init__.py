@@ -8,6 +8,7 @@ from concurrent.futures import (
 )
 from functools import (
     partial,
+    wraps,
 )
 from itertools import (
     tee,
@@ -24,7 +25,11 @@ from typing import (
     TypeVar,
 )
 
+# Third party libraries
+import uvloop
+
 # Constants
+_F = TypeVar('_F', bound=Callable[..., Any])
 _T = TypeVar('_T')
 
 # Linters
@@ -73,6 +78,24 @@ class ExecutorPools:
 
 
 EXECUTOR_POOLS: ExecutorPools = ExecutorPools()
+
+
+def block(
+    function: Callable[..., Awaitable[_T]],
+    *args: Any,
+    **kwargs: Any,
+) -> _T:
+    uvloop.install()
+    return asyncio.run(function(*args, **kwargs))
+
+
+def block_decorator(function: _F) -> _F:
+
+    @wraps(function)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return block(function, *args, **kwargs)
+
+    return cast(_F, wrapper)
 
 
 async def force_loop_cycle() -> None:

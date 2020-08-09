@@ -23,6 +23,7 @@ version = "1.0.0"
 
 [tool.poetry.dependencies]
 python = "^3.6"
+uvloop = "*"
 
 [tool.poetry.dev-dependencies]
 bandit = "1.6.2"

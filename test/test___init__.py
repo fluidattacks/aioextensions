@@ -1,5 +1,9 @@
 # Standard library
 import asyncio
+from typing import (
+    Any,
+    List,
+)
 
 # Local libraries
 from aioextensions import (
@@ -28,7 +32,7 @@ async def do(n: int) -> int:
 
 
 async def _test_resolve(loop: asyncio.AbstractEventLoop) -> None:
-    results = []
+    results: List[Any] = []
     start = loop.time()
     for x in resolve(map(do, range(5)), workers=2, greediness=4):
         try:
@@ -51,7 +55,7 @@ async def _test_resolve(loop: asyncio.AbstractEventLoop) -> None:
     assert round(loop.time() - start, 1) == 0.4
 
     start = loop.time()
-    assert [] == [x for x in resolve([])]
+    assert [] == [x for x in resolve([])]  # type: ignore
     assert round(loop.time() - start, 1) == 0.0
 
     results = []
