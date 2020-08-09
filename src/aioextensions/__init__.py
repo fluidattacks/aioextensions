@@ -22,21 +22,6 @@ _T = TypeVar('_T')
 # pylint: disable=unsubscriptable-object
 
 
-def schedule(
-    awaitable: Awaitable[_T],
-    *,
-    loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> Awaitable[_T]:
-    """Schedule an awaitable in the event loop and return a wrapper for it."""
-    # pylint: disable=unnecessary-lambda
-    wrapper = (loop or asyncio.get_event_loop()).create_future()
-    asyncio.create_task(awaitable).add_done_callback(
-        lambda future: wrapper.set_result(future),
-    )
-
-    return wrapper
-
-
 async def force_loop_cycle() -> None:
     """Force the event loop to perform once cycle."""
     await asyncio.sleep(0)
@@ -106,3 +91,18 @@ def resolve(
 
     for index, _ in stream_copy:
         yield cast(Awaitable[_T], get_one(index))
+
+
+def schedule(
+    awaitable: Awaitable[_T],
+    *,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+) -> Awaitable[_T]:
+    """Schedule an awaitable in the event loop and return a wrapper for it."""
+    # pylint: disable=unnecessary-lambda
+    wrapper = (loop or asyncio.get_event_loop()).create_future()
+    asyncio.create_task(awaitable).add_done_callback(
+        lambda future: wrapper.set_result(future),
+    )
+
+    return wrapper
