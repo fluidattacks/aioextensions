@@ -38,35 +38,32 @@ def resolve(
     awaitables: Iterable[Awaitable[_T]],
     *,
     workers: int = 1,
-    greediness: int = 1,
+    greediness: int = 0,
 ) -> Iterable[Awaitable[_T]]:
     """Resolve concurrently the iterable of awaitables using many workers."""
     if workers < 1:
         raise ValueError('workers must be >= 1')
-    if greediness < 1:
-        raise ValueError('greediness must be >= 1')
+    if greediness < 0:
+        raise ValueError('greediness must be >= 0')
 
     loop = asyncio.get_event_loop()
     readable = asyncio.Event()
     store = {}
     stream, stream_copy = tee(enumerate(awaitables))
-    workers_greediness: Dict[int, asyncio.BoundedSemaphore] = {}
     workers_tasks: Dict[int, asyncio.Task[Any]] = {}
 
-    async def worker(identifier: int, loop: asyncio.AbstractEventLoop) -> None:
+    async def worker(loop: asyncio.AbstractEventLoop) -> None:
+        done = asyncio.Queue(greediness)
         for index, awaitable in stream:
+            store[index] = done
             future = loop.create_future()
-            store[index] = (identifier, future)
-            await workers_greediness[identifier].acquire()
             future.set_result(await schedule(awaitable, loop=loop))
+            await done.put(future)
             readable.set()
 
     async def create_team() -> None:
         workers_tasks.update({
-            n: asyncio.create_task(worker(n, loop)) for n in range(workers)
-        })
-        workers_greediness.update({
-            n: asyncio.BoundedSemaphore(greediness) for n in range(workers)
+            n: asyncio.create_task(worker(loop)) for n in range(workers)
         })
         workers_task = asyncio.gather(*workers_tasks.values())
         workers_task.add_done_callback(lambda _: readable.set())
@@ -77,8 +74,7 @@ def resolve(
         if not workers_tasks:
             await create_team()
 
-        identifier, awaitable = store.pop(index)
-        workers_greediness[identifier].release()
+        awaitable = await store.pop(index).get()
         result: Awaitable[_T] = (await awaitable).result()
         return result
 
