@@ -2,11 +2,20 @@
 
 # Standard library
 import asyncio
+from concurrent.futures import (
+    ProcessPoolExecutor,
+    ThreadPoolExecutor,
+)
+from functools import (
+    partial,
+)
 from itertools import (
     tee,
 )
 from typing import (
+    Any,
     Awaitable,
+    Callable,
     cast,
     Dict,
     Iterable,
@@ -20,6 +29,50 @@ _T = TypeVar('_T')
 
 # Linters
 # pylint: disable=unsubscriptable-object
+
+
+class ExecutorPools:
+
+    def __init__(self) -> None:
+        self._process_pool: Optional[ProcessPoolExecutor] = None
+        self._thread_pool: Optional[ThreadPoolExecutor] = None
+
+    def initialize_process_pool(
+        self,
+        *,
+        max_workers: Optional[int] = None,
+    ) -> None:
+        if self._process_pool is not None:
+            self._process_pool.shutdown(wait=False)
+
+        self._process_pool = ProcessPoolExecutor(max_workers=max_workers)
+
+    def initialize_thread_pool(
+        self,
+        *,
+        max_workers: Optional[int] = None,
+    ) -> None:
+        if self._thread_pool is not None:
+            self._thread_pool.shutdown(wait=False)
+
+        self._thread_pool = ThreadPoolExecutor(max_workers=max_workers)
+
+    @property
+    def process(self) -> ProcessPoolExecutor:
+        if self._process_pool is None:
+            raise RuntimeError('Must Call initialize_process_pool first')
+
+        return self._process_pool
+
+    @property
+    def thread(self) -> ThreadPoolExecutor:
+        if self._thread_pool is None:
+            raise RuntimeError('Must Call initialize_thread_pool first')
+
+        return self._thread_pool
+
+
+EXECUTOR_POOLS: ExecutorPools = ExecutorPools()
 
 
 async def force_loop_cycle() -> None:
@@ -106,3 +159,25 @@ def schedule(
     )
 
     return wrapper
+
+
+async def unblock(
+    function: Callable[..., _T],
+    *args: Any,
+    **kwargs: Any,
+) -> _T:
+    """Execute function(*args, **kwargs) in the specified thread executor."""
+    return await asyncio.get_running_loop().run_in_executor(
+        EXECUTOR_POOLS.thread, partial(function, *args, **kwargs),
+    )
+
+
+async def unblock_cpu(
+    function: Callable[..., _T],
+    *args: Any,
+    **kwargs: Any,
+) -> _T:
+    """Execute function(*args, **kwargs) in the specified process executor."""
+    return await asyncio.get_running_loop().run_in_executor(
+        EXECUTOR_POOLS.process, partial(function, *args, **kwargs),
+    )

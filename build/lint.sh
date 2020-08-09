@@ -5,7 +5,7 @@ function main {
     --config-file 'settings.cfg'
   )
   local args_prospector=(
-    --doc-warnings
+    # --doc-warnings
     --full-pep8
     --strictness veryhigh
     --test-warnings
