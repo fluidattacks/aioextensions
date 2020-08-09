@@ -18,6 +18,9 @@ from typing import (
 # Constants
 _T = TypeVar('_T')
 
+# Linters
+# pylint: disable=unsubscriptable-object
+
 
 def schedule(
     awaitable: Awaitable[_T],
@@ -34,6 +37,11 @@ def schedule(
     return wrapper
 
 
+async def force_loop_cycle() -> None:
+    """Force the event loop to perform once cycle."""
+    await asyncio.sleep(0)
+
+
 def resolve(
     awaitables: Iterable[Awaitable[_T]],
     *,
@@ -47,32 +55,36 @@ def resolve(
         raise ValueError('greediness must be >= 0')
 
     loop = asyncio.get_event_loop()
-    readable = asyncio.Event()
     store = {}
     stream, stream_copy = tee(enumerate(awaitables))
+    stream_finished = asyncio.Event()
+    workers_up = asyncio.Event()
     workers_tasks: Dict[int, asyncio.Task[Any]] = {}
 
     async def worker(loop: asyncio.AbstractEventLoop) -> None:
-        done = asyncio.Queue(greediness)
+        done: asyncio.Queue[asyncio.Future[asyncio.Future[Awaitable[_T]]]] = (
+            asyncio.Queue(greediness)
+        )
         for index, awaitable in stream:
             store[index] = done
             future = loop.create_future()
             future.set_result(await schedule(awaitable, loop=loop))
             await done.put(future)
-            readable.set()
+            workers_up.set()
+        workers_up.set()
+        stream_finished.set()
 
-    async def create_team() -> None:
-        workers_tasks.update({
-            n: asyncio.create_task(worker(loop)) for n in range(workers)
-        })
-        workers_task = asyncio.gather(*workers_tasks.values())
-        workers_task.add_done_callback(lambda _: readable.set())
-
-        await readable.wait()
+    async def start_workers() -> None:
+        for index in range(workers):
+            if stream_finished.is_set():
+                break
+            workers_tasks[index] = asyncio.create_task(worker(loop))
+            await force_loop_cycle()
+        await workers_up.wait()
 
     async def get_one(index: int) -> Awaitable[_T]:
         if not workers_tasks:
-            await create_team()
+            await start_workers()
 
         awaitable = await store.pop(index).get()
         result: Awaitable[_T] = (await awaitable).result()

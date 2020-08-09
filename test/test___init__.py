@@ -54,6 +54,16 @@ async def _test_resolve(loop: asyncio.AbstractEventLoop) -> None:
     assert [] == [x for x in resolve([])]
     assert round(loop.time() - start, 1) == 0.0
 
+    results = []
+    start = loop.time()
+    for x in resolve(map(do, range(5)), workers=100000, greediness=1):
+        try:
+            results.append(await x)
+        except Error:
+            results.append('catched')
+    assert round(loop.time() - start, 1) == 0.4
+    assert results == [0, 1, 2, 'catched', 4]
+
 
 def test_resolve() -> None:
     loop = asyncio.get_event_loop()
