@@ -22,7 +22,7 @@ repository = "https://github.com/kamadorueda/aioextensions"
 version = "1.0.0"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.6"
 
 [tool.poetry.dev-dependencies]
 bandit = "1.6.2"
