@@ -46,19 +46,26 @@ async def do(n: int) -> int:
 
 def test_executor_pool() -> None:
     for pool in [PROCESS_POOL, THREAD_POOL]:
+        pool.shutdown(wait=False)
         with suppress(RuntimeError):
             pool.pool
         pool.initialize()
         pool.pool
         pool.initialize()
+        pool.shutdown(wait=False)
+
+
+@block_decorator
+async def test_unblock() -> None:
+    await unblock(sync)
+    await unblock(sync)
+    await unblock_cpu(sync)
+    await unblock_cpu(sync)
 
 
 @block_decorator
 async def test_collect_and_resolve() -> None:
     loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
-
-    await unblock(sync)
-    await unblock_cpu(sync)
 
     with suppress(ValueError):
         tuple(resolve([], workers=0))

@@ -14,6 +14,9 @@ from functools import (
 from itertools import (
     tee,
 )
+from os import (
+    cpu_count,
+)
 from typing import (
     Any,
     Awaitable,
@@ -32,6 +35,7 @@ from typing import (
 import uvloop
 
 # Constants
+CPU_COUNT: int = cpu_count() or 1
 _F = TypeVar('_F', bound=Callable[..., Any])
 _T = TypeVar('_T')
 
@@ -77,12 +81,21 @@ class ExecutorPool:
 
         self._pool = self._cls(max_workers=max_workers)
 
+    def shutdown(self, *, wait: bool) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=wait)
+            self._pool = None
+
     @property
     def pool(self) -> Executor:
         if self._pool is None:
             raise RuntimeError('Must Call initialize first')
 
         return self._pool
+
+    @property
+    def initialized(self) -> bool:
+        return self._pool is not None
 
 
 async def force_loop_cycle() -> None:
@@ -178,6 +191,9 @@ async def unblock(
     **kwargs: Any,
 ) -> _T:
     """Execute function(*args, **kwargs) in the specified thread executor."""
+    if not THREAD_POOL.initialized:
+        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
+
     return await asyncio.get_running_loop().run_in_executor(
         THREAD_POOL.pool, partial(function, *args, **kwargs),
     )
@@ -189,11 +205,14 @@ async def unblock_cpu(
     **kwargs: Any,
 ) -> _T:
     """Execute function(*args, **kwargs) in the specified process executor."""
+    if not PROCESS_POOL.initialized:
+        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+
     return await asyncio.get_running_loop().run_in_executor(
         PROCESS_POOL.pool, partial(function, *args, **kwargs),
     )
 
 
 # Constants
-THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)
 PROCESS_POOL: ExecutorPool = ExecutorPool(ProcessPoolExecutor)
+THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)
