@@ -5,9 +5,10 @@ function helper_compute_version {
     import time
     now=time.gmtime()
     minutes_month=(
-      (now.tm_mday - 1) * 1440
-      + now.tm_hour * 60
-      + now.tm_min
+      (now.tm_mday - 1) * 86400
+      + now.tm_hour * 3600
+      + now.tm_min * 60
+      + now.tm_sec
     )
     print(time.strftime(f"%y.%m.{minutes_month}"))
   '

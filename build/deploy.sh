@@ -13,6 +13,8 @@ function main {
 
       version=$(helper_compute_version) \
   &&  echo "[INFO] Version: ${version}" \
+  &&  git tag --message "release-${version}" --sign "release-${version}" \
+  &&  git push origin "release-${version}" \
   &&  trap 'restore_version' EXIT \
   &&  sed --in-place \
         "s|^version = .*$|version = \"${version}\"|g" \
