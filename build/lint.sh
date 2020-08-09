@@ -2,8 +2,7 @@
 
 function main {
   local args_mypy=(
-    --ignore-missing-imports
-    --strict
+    --config-file 'settings.cfg'
   )
   local args_prospector=(
     --doc-warnings

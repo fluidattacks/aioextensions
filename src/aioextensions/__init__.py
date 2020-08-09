@@ -6,12 +6,12 @@ from itertools import (
     tee,
 )
 from typing import (
-    Any,
     Awaitable,
     cast,
     Dict,
     Iterable,
     Optional,
+    Tuple,
     TypeVar,
 )
 
@@ -42,6 +42,26 @@ async def force_loop_cycle() -> None:
     await asyncio.sleep(0)
 
 
+async def _resolve_worker(
+    *,
+    awaitables: Iterable[Tuple[int, Awaitable[_T]]],
+    greediness: int,
+    loop: asyncio.AbstractEventLoop,
+    store: Dict[int, asyncio.Queue],
+    stream_finished: asyncio.Event,
+    workers_up: asyncio.Event,
+) -> None:
+    done: asyncio.Queue = asyncio.Queue(greediness)
+    for index, awaitable in awaitables:
+        store[index] = done
+        future = loop.create_future()
+        future.set_result(await schedule(awaitable, loop=loop))
+        await done.put(future)
+        workers_up.set()
+    workers_up.set()
+    stream_finished.set()
+
+
 def resolve(
     awaitables: Iterable[Awaitable[_T]],
     *,
@@ -55,30 +75,24 @@ def resolve(
         raise ValueError('greediness must be >= 0')
 
     loop = asyncio.get_event_loop()
-    store = {}
+    store: Dict[int, asyncio.Queue] = {}
     stream, stream_copy = tee(enumerate(awaitables))
     stream_finished = asyncio.Event()
     workers_up = asyncio.Event()
-    workers_tasks: Dict[int, asyncio.Task[Any]] = {}
-
-    async def worker(loop: asyncio.AbstractEventLoop) -> None:
-        done: asyncio.Queue[asyncio.Future[asyncio.Future[Awaitable[_T]]]] = (
-            asyncio.Queue(greediness)
-        )
-        for index, awaitable in stream:
-            store[index] = done
-            future = loop.create_future()
-            future.set_result(await schedule(awaitable, loop=loop))
-            await done.put(future)
-            workers_up.set()
-        workers_up.set()
-        stream_finished.set()
+    workers_tasks: Dict[int, asyncio.Task] = {}
 
     async def start_workers() -> None:
         for index in range(workers):
             if stream_finished.is_set():
                 break
-            workers_tasks[index] = asyncio.create_task(worker(loop))
+            workers_tasks[index] = asyncio.create_task(_resolve_worker(
+                awaitables=stream,
+                greediness=greediness,
+                loop=loop,
+                store=store,
+                stream_finished=stream_finished,
+                workers_up=workers_up,
+            ))
             await force_loop_cycle()
         await workers_up.wait()
 
