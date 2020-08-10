@@ -179,11 +179,13 @@ def schedule(
     loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> Awaitable[_T]:
     """Schedule an awaitable in the event loop and return a wrapper for it."""
-    # pylint: disable=unnecessary-lambda
     wrapper = (loop or asyncio.get_event_loop()).create_future()
-    asyncio.create_task(awaitable).add_done_callback(
-        lambda future: wrapper.set_result(future),
-    )
+
+    def _done_callback(future: asyncio.Future) -> None:
+        if not wrapper.done():
+            wrapper.set_result(future)
+
+    asyncio.create_task(awaitable).add_done_callback(_done_callback)
 
     return wrapper
 
