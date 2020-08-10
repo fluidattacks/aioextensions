@@ -24,6 +24,7 @@ from typing import (
     cast,
     Dict,
     Iterable,
+    Iterator,
     Optional,
     Tuple,
     Type,
@@ -98,9 +99,10 @@ class ExecutorPool:
         return self._pool is not None
 
 
-async def force_loop_cycle() -> None:
+@asyncio.coroutine
+def force_loop_cycle() -> Iterator[None]:
     """Force the event loop to perform once cycle."""
-    await asyncio.sleep(0)
+    yield
 
 
 def resolve(  # noqa: mccabe
