@@ -115,6 +115,9 @@ def resolve(  # noqa: mccabe
     if worker_greediness < 0:
         raise ValueError('worker_greediness must be >= 0')
 
+    if hasattr(awaitables, '__len__'):
+        workers = min(workers, len(awaitables))  # type: ignore
+
     loop = asyncio.get_event_loop()
     store: Dict[int, asyncio.Queue] = {}
     stream, stream_copy = tee(enumerate(awaitables))
