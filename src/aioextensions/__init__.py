@@ -1,4 +1,10 @@
-"""Aioextensions module."""
+"""Python Asyncio Extensions
+
+[![PyPI](https://img.shields.io/pypi/v/aioextensions)](https://pypi.org/project/aioextensions)
+[![Status](https://img.shields.io/pypi/status/aioextensions)](https://pypi.org/project/aioextensions)
+[![License](https://img.shields.io/pypi/l/aioextensions)](https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
+[![Downloads](https://img.shields.io/pypi/dm/aioextensions)](https://pypi.org/project/aioextensions)
+"""
 
 # Standard library
 import asyncio
@@ -99,10 +105,10 @@ class ExecutorPool:
         return self._pool is not None
 
 
-@asyncio.coroutine
-def force_loop_cycle() -> Iterator[None]:
-    """Force the event loop to perform once cycle."""
-    yield
+async def force_loop_cycle() -> None:
+    """Force the event loop to perform once cycle.
+    """
+    await asyncio.sleep(0)
 
 
 def resolve(  # noqa: mccabe

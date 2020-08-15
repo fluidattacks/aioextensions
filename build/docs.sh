@@ -1,13 +1,15 @@
 #! /usr/bin/env bash
 
 function main {
-  local args_sphinx_build=(
-    docs/
-    docs/_build/
-  )
-
       echo '[INFO] Building' \
-  &&  poetry run sphinx-build "${args_sphinx_build[@]}" \
+  &&  rm -rf docs/ \
+  &&  poetry run pdoc \
+        --config 'git_link_template="https://github.com/kamadorueda/aioextensions/blob/latest/{path}#L{start_line}-L{end_line}"' \
+        --force \
+        --html \
+        --output-dir docs/ \
+        aioextensions \
+  &&  mv docs/aioextensions/* docs/ \
 
 }
 
