@@ -105,7 +105,7 @@ def block_decorator(function: _F) -> _F:
     return cast(_F, wrapper)
 
 
-class ExecutorPool:
+class _ExecutorPool:
 
     def __init__(
         self,
@@ -131,7 +131,7 @@ class ExecutorPool:
     @property
     def pool(self) -> Executor:
         if self._pool is None:
-            raise RuntimeError('Must Call initialize first')
+            raise RuntimeError('Must call initialize first')
 
         return self._pool
 
@@ -266,5 +266,5 @@ async def unblock_cpu(
 
 
 # Constants
-PROCESS_POOL: ExecutorPool = ExecutorPool(ProcessPoolExecutor)
-THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)
+PROCESS_POOL: _ExecutorPool = _ExecutorPool(ProcessPoolExecutor)
+THREAD_POOL: _ExecutorPool = _ExecutorPool(ThreadPoolExecutor)
