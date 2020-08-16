@@ -2,7 +2,6 @@
 
 function main {
       echo '[INFO] Building' \
-  &&  rm -rf docs/ \
   &&  poetry run pdoc \
         --config 'git_link_template="https://github.com/kamadorueda/aioextensions/blob/latest/{path}#L{start_line}-L{end_line}"' \
         --force \

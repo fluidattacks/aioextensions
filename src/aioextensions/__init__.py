@@ -19,6 +19,154 @@ https://kamadorueda.github.io/aioextensions/)
 https://img.shields.io/pypi/l/aioextensions?color=success&label=License&style=flat-square)](
 https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
 
+# Rationale
+
+Modern services deal with a bunch of different tasks to perform:
+
+![Latency comparison](
+https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/latency.png)
+
+The important thing to note is that tasks can be categorized in two groups:
+
+## CPU bound tasks
+
+Those that happen inside the CPU, with very low latency and exploit the full
+potential of the hardware in the computer.
+
+![Resources of an CPU bound task](
+https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_cpu_task.png)
+
+Examples of these tasks include:
+
+| Task                 | Latency in seconds |
+|----------------------|-------------------:|
+| CPU computation      |        0.000000001 |
+| Memory access        |          0.0000001 |
+| CPU Processing (1KB) |           0.000003 |
+| Memory read (1MB)    |            0.00025 |
+
+## IO bound tasks
+
+Those that happen over a wire that transports data, with very high latencies
+and do not exploit the full potential of the hardware because the only thing to
+do is waiting until the data gets to the other end and comes back (round-trip).
+
+![Resources of an IO bound task](
+https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_io_task.png)
+
+Examples of these tasks include:
+
+| Task                 | Latency in seconds |
+|----------------------|-------------------:|
+| Disk access          |            0.00015 |
+| HTTP to localhost    |             0.0005 |
+| Disk read (1MB)      |               0.02 |
+| HTTP to internet     |               0.15 |
+
+## Standard library
+
+The Python's standard library offers the [concurrent.futures](
+https://docs.python.org/3/library/concurrent.futures.html) module to work with
+these problems.
+
+You can use it to create a pool of Threads or Processes and send work to them:
+
+-  Work done by a pool of Processes is executed in parallel: all CPU cores are
+    being used.
+-  Work done by a pool of Threads is done concurrently: tasks execution is
+    overlapping, but not necessarily parallel: only 1 task can use the CPU
+    while the remaining ones are waiting the
+    [GIL](https://realpython.com/python-gil).
+
+This is fine for most use cases, however, sometimes you need to solve
+a mixture of tasks types in a hardware efficient way.
+
+### Solving CPU bound tasks
+
+The optimal way to perform CPU bound tasks is to send them to separate
+processses in order to bypass the [GIL](https://realpython.com/python-gil).
+
+Usage:
+
+    >>> from concurrent.futures import ProcessPoolExecutor
+
+    >>> def cpu_bound_task(id: str):
+            print('doing:', id)
+            for _ in range(10): 3**20000000
+            print('returning:', id)
+            return id
+
+    >>> def main():
+            input_data = range(5)
+            with ProcessPoolExecutor(max_workers=4) as workers:
+                for result in workers.map(cpu_bound_task, input_data):
+                    print('got result:', result)
+
+    >>> main()
+    doing: 0
+    doing: 1
+    doing: 2
+    doing: 3
+    returning: 3
+    doing: 4
+    returning: 1
+    returning: 0
+    got result: 0
+    got result: 1
+    returning: 2
+    got result: 2
+    got result: 3
+    returning: 4
+    got result: 4
+
+### Solving IO bound tasks
+
+The optimal way to perform IO bound tasks is to send them to separate threads.
+Since there is a very low CPU usage, we don't care about the performance
+bottleneck the [GIL](https://realpython.com/python-gil) introduce because most
+of the time every thread will be just waiting in idle state.
+
+Usage:
+
+    >>> from concurrent.futures import ThreadPoolExecutor
+    >>> from time import sleep
+
+    >>> def io_bound_task(id: str):
+            print('doing:', id)
+            sleep(1)
+            print('returning:', id)
+            return id
+
+    >>> def main():
+        input_data = range(5)
+        with ThreadPoolExecutor(max_workers=1000) as workers:
+            for result in workers.map(io_bound_task, input_data):
+                print('got result:', result)
+
+    >>> main()
+    doing: 0
+    doing: 1
+    doing: 2
+    doing: 3
+    doing: 4
+    returning: 2
+    returning: 4
+    returning: 1
+    returning: 0
+    returning: 3
+    got result: 0
+    got result: 1
+    got result: 2
+    got result: 3
+    got result: 4
+
+### Solving it with asyncio
+
+[Asyncio](https://docs.python.org/3/library/asyncio.html) offers a different
+approach:
+
+
+
 # Installing
 
     $ pip install aioextensions

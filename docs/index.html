@@ -29,6 +29,163 @@
 <a href="https://pypi.org/project/aioextensions"><img alt="Status" src="https://img.shields.io/pypi/status/aioextensions?label=Status&amp;style=flat-square"></a>
 <a href="https://kamadorueda.github.io/aioextensions/"><img alt="Coverage" src="https://img.shields.io/badge/Coverage-100%25-success?style=flat-square"></a>
 <a href="https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md"><img alt="License" src="https://img.shields.io/pypi/l/aioextensions?color=success&amp;label=License&amp;style=flat-square"></a></p>
+<h1 id="rationale">Rationale</h1>
+<p>Modern services deal with a bunch of different tasks to perform:</p>
+<p><img alt="Latency comparison" src="https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/latency.png"></p>
+<p>The important thing to note is that tasks can be categorized in two groups:</p>
+<h2 id="cpu-bound-tasks">CPU bound tasks</h2>
+<p>Those that happen inside the CPU, with very low latency and exploit the full
+potential of the hardware in the computer.</p>
+<p><img alt="Resources of an CPU bound task" src="https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_cpu_task.png"></p>
+<p>Examples of these tasks include:</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th align="right">Latency in seconds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU computation</td>
+<td align="right">0.000000001</td>
+</tr>
+<tr>
+<td>Memory access</td>
+<td align="right">0.0000001</td>
+</tr>
+<tr>
+<td>CPU Processing (1KB)</td>
+<td align="right">0.000003</td>
+</tr>
+<tr>
+<td>Memory read (1MB)</td>
+<td align="right">0.00025</td>
+</tr>
+</tbody>
+</table>
+<h2 id="io-bound-tasks">IO bound tasks</h2>
+<p>Those that happen over a wire that transports data, with very high latencies
+and do not exploit the full potential of the hardware because the only thing to
+do is waiting until the data gets to the other end and comes back (round-trip)</p>
+<p><img alt="Resources of an IO bound task" src="https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_io_task.png"></p>
+<p>Examples of these tasks include:</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th align="right">Latency in seconds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Disk access</td>
+<td align="right">0.00015</td>
+</tr>
+<tr>
+<td>HTTP to localhost</td>
+<td align="right">0.0005</td>
+</tr>
+<tr>
+<td>Disk read (1MB)</td>
+<td align="right">0.02</td>
+</tr>
+<tr>
+<td>HTTP to internet</td>
+<td align="right">0.15</td>
+</tr>
+</tbody>
+</table>
+<h2 id="standard-library">Standard library</h2>
+<p>The Python's standard library offers the <a href="https://docs.python.org/3/library/concurrent.futures.html">concurrent.futures</a> module to work with
+these problems.</p>
+<p>You can use it to create a pool of Threads or Processes and send work to them:</p>
+<ul>
+<li>Work done by a pool of Processes is executed in parallel: all CPU cores are
+being used.</li>
+<li>Work done by a pool of Threads is done concurrently: tasks execution is
+overlapping, but not necessarily parallel: only 1 task can use the CPU
+while the remaining ones are waiting the
+<a href="https://realpython.com/python-gil">GIL</a>.</li>
+</ul>
+<p>This is fine for most use cases, however, sometimes you need to solve
+a mixture of tasks types in a hardware efficient way.</p>
+<h3 id="solving-cpu-bound-tasks">Solving CPU bound tasks</h3>
+<p>The optimal way to perform CPU bound tasks is to send them to separate
+processses in order to bypass the <a href="https://realpython.com/python-gil">GIL</a>.</p>
+<h2 id="usage">Usage</h2>
+<pre><code class="python">&gt;&gt;&gt; from concurrent.futures import ProcessPoolExecutor
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; def cpu_bound_task(id: str):
+        print('doing:', id)
+        for _ in range(10): 3**20000000
+        print('returning:', id)
+        return id
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; def main():
+        input_data = range(5)
+        with ProcessPoolExecutor(max_workers=4) as workers:
+            for result in workers.map(cpu_bound_task, input_data):
+                print('got result:', result)
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; main()
+doing: 0
+doing: 1
+doing: 2
+doing: 3
+returning: 3
+doing: 4
+returning: 1
+returning: 0
+got result: 0
+got result: 1
+returning: 2
+got result: 2
+got result: 3
+returning: 4
+got result: 4
+</code></pre>
+<h3 id="solving-io-bound-tasks">Solving IO bound tasks</h3>
+<p>The optimal way to perform IO bound tasks is to send them to separate threads.
+Since there is a very low CPU usage, we don't care about the performance
+bottleneck the <a href="https://realpython.com/python-gil">GIL</a> introduce because most
+of the time every thread will be just waiting in idle state.</p>
+<h2 id="usage_1">Usage</h2>
+<pre><code class="python">&gt;&gt;&gt; from concurrent.futures import ThreadPoolExecutor
+&gt;&gt;&gt; from time import sleep
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; def io_bound_task(id: str):
+        print('doing:', id)
+        sleep(1)
+        print('returning:', id)
+        return id
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; def main():
+    input_data = range(5)
+    with ThreadPoolExecutor(max_workers=1000) as workers:
+        for result in workers.map(io_bound_task, input_data):
+            print('got result:', result)
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; main()
+doing: 0
+doing: 1
+doing: 2
+doing: 3
+doing: 4
+returning: 2
+returning: 4
+returning: 1
+returning: 0
+returning: 3
+got result: 0
+got result: 1
+got result: 2
+got result: 3
+got result: 4
+</code></pre>
+<h3 id="solving-it-with-asyncio">Solving it with asyncio</h3>
+<p><a href="https://docs.python.org/3/library/asyncio.html">Asyncio</a> offers a different
+approach:</p>
 <h1 id="installing">Installing</h1>
 <pre><code>$ pip install aioextensions
 </code></pre>
@@ -45,7 +202,7 @@
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L399" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L547" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -67,6 +224,154 @@ https://kamadorueda.github.io/aioextensions/)
 [![License](
 https://img.shields.io/pypi/l/aioextensions?color=success&amp;label=License&amp;style=flat-square)](
 https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
+
+# Rationale
+
+Modern services deal with a bunch of different tasks to perform:
+
+![Latency comparison](
+https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/latency.png)
+
+The important thing to note is that tasks can be categorized in two groups:
+
+## CPU bound tasks
+
+Those that happen inside the CPU, with very low latency and exploit the full
+potential of the hardware in the computer.
+
+![Resources of an CPU bound task](
+https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_cpu_task.png)
+
+Examples of these tasks include:
+
+| Task                 | Latency in seconds |
+|----------------------|-------------------:|
+| CPU computation      |        0.000000001 |
+| Memory access        |          0.0000001 |
+| CPU Processing (1KB) |           0.000003 |
+| Memory read (1MB)    |            0.00025 |
+
+## IO bound tasks
+
+Those that happen over a wire that transports data, with very high latencies
+and do not exploit the full potential of the hardware because the only thing to
+do is waiting until the data gets to the other end and comes back (round-trip)
+
+![Resources of an IO bound task](
+https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_io_task.png)
+
+Examples of these tasks include:
+
+| Task                 | Latency in seconds |
+|----------------------|-------------------:|
+| Disk access          |            0.00015 |
+| HTTP to localhost    |             0.0005 |
+| Disk read (1MB)      |               0.02 |
+| HTTP to internet     |               0.15 |
+
+## Standard library
+
+The Python&#39;s standard library offers the [concurrent.futures](
+https://docs.python.org/3/library/concurrent.futures.html) module to work with
+these problems.
+
+You can use it to create a pool of Threads or Processes and send work to them:
+
+-  Work done by a pool of Processes is executed in parallel: all CPU cores are
+    being used.
+-  Work done by a pool of Threads is done concurrently: tasks execution is
+    overlapping, but not necessarily parallel: only 1 task can use the CPU
+    while the remaining ones are waiting the
+    [GIL](https://realpython.com/python-gil).
+
+This is fine for most use cases, however, sometimes you need to solve
+a mixture of tasks types in a hardware efficient way.
+
+### Solving CPU bound tasks
+
+The optimal way to perform CPU bound tasks is to send them to separate
+processses in order to bypass the [GIL](https://realpython.com/python-gil).
+
+Usage:
+
+    &gt;&gt;&gt; from concurrent.futures import ProcessPoolExecutor
+
+    &gt;&gt;&gt; def cpu_bound_task(id: str):
+            print(&#39;doing:&#39;, id)
+            for _ in range(10): 3**20000000
+            print(&#39;returning:&#39;, id)
+            return id
+
+    &gt;&gt;&gt; def main():
+            input_data = range(5)
+            with ProcessPoolExecutor(max_workers=4) as workers:
+                for result in workers.map(cpu_bound_task, input_data):
+                    print(&#39;got result:&#39;, result)
+
+    &gt;&gt;&gt; main()
+    doing: 0
+    doing: 1
+    doing: 2
+    doing: 3
+    returning: 3
+    doing: 4
+    returning: 1
+    returning: 0
+    got result: 0
+    got result: 1
+    returning: 2
+    got result: 2
+    got result: 3
+    returning: 4
+    got result: 4
+
+### Solving IO bound tasks
+
+The optimal way to perform IO bound tasks is to send them to separate threads.
+Since there is a very low CPU usage, we don&#39;t care about the performance
+bottleneck the [GIL](https://realpython.com/python-gil) introduce because most
+of the time every thread will be just waiting in idle state.
+
+Usage:
+
+    &gt;&gt;&gt; from concurrent.futures import ThreadPoolExecutor
+    &gt;&gt;&gt; from time import sleep
+
+    &gt;&gt;&gt; def io_bound_task(id: str):
+            print(&#39;doing:&#39;, id)
+            sleep(1)
+            print(&#39;returning:&#39;, id)
+            return id
+
+    &gt;&gt;&gt; def main():
+        input_data = range(5)
+        with ThreadPoolExecutor(max_workers=1000) as workers:
+            for result in workers.map(io_bound_task, input_data):
+                print(&#39;got result:&#39;, result)
+
+    &gt;&gt;&gt; main()
+    doing: 0
+    doing: 1
+    doing: 2
+    doing: 3
+    doing: 4
+    returning: 2
+    returning: 4
+    returning: 1
+    returning: 0
+    returning: 3
+    got result: 0
+    got result: 1
+    got result: 2
+    got result: 3
+    got result: 4
+
+### Solving it with asyncio
+
+[Asyncio](https://docs.python.org/3/library/asyncio.html) offers a different
+approach:
+
+
 
 # Installing
 
@@ -479,7 +784,7 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L81-L104" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L229-L252" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def block(
     function: Callable[..., Awaitable[_T]],
@@ -523,7 +828,7 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L107-L124" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L255-L272" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def block_decorator(function: _F) -&gt; _F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
@@ -580,7 +885,7 @@ returning: 4
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L303-L348" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L451-L496" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[_T]],
@@ -640,7 +945,7 @@ yield control back to the event-loop.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L162-L168" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L310-L316" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform one cycle.
@@ -736,7 +1041,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L171-L300" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L319-L448" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[_T]],
@@ -878,7 +1183,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L351-L367" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L499-L515" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[_T],
@@ -907,7 +1212,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L370-L381" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L518-L529" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def unblock(
     function: Callable[..., _T],
@@ -931,7 +1236,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L384-L395" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L532-L543" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def unblock_cpu(
     function: Callable[..., _T],
@@ -961,7 +1266,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L127-L159" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L275-L307" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
 
@@ -1005,7 +1310,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L157-L159" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L305-L307" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -1018,7 +1323,7 @@ def initialized(self) -&gt; bool:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L150-L155" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L298-L303" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -1039,7 +1344,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L139-L143" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L287-L291" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     if self._pool is not None:
@@ -1056,7 +1361,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L145-L148" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L293-L296" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     if self._pool is not None:
@@ -1073,6 +1378,17 @@ def pool(self) -&gt; Executor:
 <h1>Index</h1>
 <div class="toc">
 <ul>
+<li><a href="#rationale">Rationale</a><ul>
+<li><a href="#cpu-bound-tasks">CPU bound tasks</a></li>
+<li><a href="#io-bound-tasks">IO bound tasks</a></li>
+<li><a href="#standard-library">Standard library</a><ul>
+<li><a href="#solving-cpu-bound-tasks">Solving CPU bound tasks</a></li>
+<li><a href="#solving-io-bound-tasks">Solving IO bound tasks</a></li>
+<li><a href="#solving-it-with-asyncio">Solving it with asyncio</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li><a href="#installing">Installing</a></li>
 <li><a href="#using">Using</a></li>
 </ul>
