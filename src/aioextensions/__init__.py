@@ -63,13 +63,37 @@ Examples of these tasks include:
 | Disk read (1MB)      |               0.02 |
 | HTTP to internet     |               0.15 |
 
-## Standard library
+# Hardware costs
 
-The Python's standard library offers the [concurrent.futures](
-https://docs.python.org/3/library/concurrent.futures.html) module to work with
-these problems.
+At the end of the day, we want to minimize the amount of cost per user served
+by the program, server, or service.
 
-You can use it to create a pool of Threads or Processes and send work to them:
+In order to achieve this we need a model that allows us to exploit all CPU
+cores and installed hardware in the machine, while maintaining the ability to
+query large amounts of high-latency external services over the network:
+databases, caches, storage, distributed queues, or input from multiple users.
+
+# Concurrency model
+
+Python's Async IO has a concurrency model based on an **event loop**, which
+is responsible for executing the code, collecting and processing what's needed.
+
+This event-loop executes in the main thread of the Python interpreter and
+therefore it's limited by the [GIL](https://realpython.com/python-gil), so it's
+alone unable to exploit all hardware installed in the host.
+
+However:
+
+- CPU intensive work can be sent to a pool of Processes, far from the
+    event-loop and thus being able to bypass the
+    [GIL](https://realpython.com/python-gil), exploiting many CPU cores in
+    the machine, and leaving the event-loop schedule and coordinate incoming
+    requests.
+- IO intensive work can be sent to a pool of Threads, far from the event-loop
+    and thus being able to wait for high-latency operations without
+    interrupting the event-loop work.
+
+There is an important difference:
 
 -  Work done by a pool of Processes is executed in parallel: all CPU cores are
     being used.
@@ -78,94 +102,93 @@ You can use it to create a pool of Threads or Processes and send work to them:
     while the remaining ones are waiting the
     [GIL](https://realpython.com/python-gil).
 
-This is fine for most use cases, however, sometimes you need to solve
-a mixture of tasks types in a hardware efficient way.
-
-### Solving CPU bound tasks
+## Solving CPU bound tasks efficiently
 
 The optimal way to perform CPU bound tasks is to send them to separate
 processses in order to bypass the [GIL](https://realpython.com/python-gil).
 
 Usage:
 
-    >>> from concurrent.futures import ProcessPoolExecutor
+    >>> from aioextensions import block, collect, unblock_cpu
 
     >>> def cpu_bound_task(id: str):
             print('doing:', id)
+            # Imagine here something that uses a lot the CPU
+            # For example: this complex mathematical operation
             for _ in range(10): 3**20000000
             print('returning:', id)
             return id
 
-    >>> def main():
-            input_data = range(5)
-            with ProcessPoolExecutor(max_workers=4) as workers:
-                for result in workers.map(cpu_bound_task, input_data):
-                    print('got result:', result)
+    >>> async def main():
+            results = await collect([
+                # Unblock_cpu sends the task to a pool of processes
+                unblock_cpu(cpu_bound_task, id)
+                # Let's solve 5 of those tasks in parallel!
+                for id in range(5)
+            ])
+            print('results:', results)
 
-    >>> main()
+    >>> block(main)
+    # I have 4 CPU cores in my machine
     doing: 0
     doing: 1
     doing: 2
     doing: 3
-    returning: 3
-    doing: 4
     returning: 1
-    returning: 0
-    got result: 0
-    got result: 1
+    doing: 4
     returning: 2
-    got result: 2
-    got result: 3
+    returning: 3
+    returning: 0
     returning: 4
-    got result: 4
+    results: (0, 1, 2, 3, 4)
 
-### Solving IO bound tasks
+As is expected, all CPU cores were used and we were hardware-efficient!
 
-The optimal way to perform IO bound tasks is to send them to separate threads.
-Since there is a very low CPU usage, we don't care about the performance
-bottleneck the [GIL](https://realpython.com/python-gil) introduce because most
-of the time every thread will be just waiting in idle state.
+## Solving IO bound tasks efficiently
+
+The optimal way to perform IO bound tasks is to send them to separate
+threads. This does not bypass the [GIL](https://realpython.com/python-gil).
+However, threads will be in idle state most of the time, waiting high-latency
+operations to complete.
 
 Usage:
 
-    >>> from concurrent.futures import ThreadPoolExecutor
-    >>> from time import sleep
+    >>> from aioextensions import block, collect, unblock
+    >>> from time import sleep, time
 
     >>> def io_bound_task(id: str):
-            print('doing:', id)
+            print('time:', time(), 'doing:', id)
+            # Imagine here something with high latency
+            # For example: a call to the database, or this sleep
             sleep(1)
-            print('returning:', id)
+            print('time:', time(), 'returning:', id)
             return id
 
-    >>> def main():
-        input_data = range(5)
-        with ThreadPoolExecutor(max_workers=1000) as workers:
-            for result in workers.map(io_bound_task, input_data):
-                print('got result:', result)
+    >>> async def main():
+            results = await collect([
+                # Unblock sends the task to a pool of threads
+                unblock(io_bound_task, id)
+                # Let's solve 5 of those tasks in parallel!
+                for id in range(5)
+            ])
+            print('time:', time(), 'results:', results)
 
-    >>> main()
-    doing: 0
-    doing: 1
-    doing: 2
-    doing: 3
-    doing: 4
-    returning: 2
-    returning: 4
-    returning: 1
-    returning: 0
-    returning: 3
-    got result: 0
-    got result: 1
-    got result: 2
-    got result: 3
-    got result: 4
+    >>> block(main)
+    time: 1597623831 doing: 0
+    time: 1597623831 doing: 1
+    time: 1597623831 doing: 2
+    time: 1597623831 doing: 3
+    time: 1597623831 doing: 4
+    time: 1597623832 returning: 0
+    time: 1597623832 returning: 4
+    time: 1597623832 returning: 3
+    time: 1597623832 returning: 2
+    time: 1597623832 returning: 1
+    time: 1597623832 results: (0, 1, 2, 3, 4)
 
-### Solving it with asyncio
-
-[Asyncio](https://docs.python.org/3/library/asyncio.html) offers a different
-approach:
-
-
+As is expected, all tasks were executed concurrently. This means that
+instead of waiting five seconds for five tasks (in serial) we just waited one
+second for all of them.
 
 # Installing
 
@@ -181,6 +204,8 @@ approach:
             schedule,
             # ...
         )
+
+Please read the documentation bellow for more details about every function.
 """
 
 # Standard library
@@ -219,18 +244,18 @@ import uvloop
 
 # Constants
 CPU_COUNT: int = cpu_count() or 1
-_F = TypeVar('_F', bound=Callable[..., Any])
-_T = TypeVar('_T')
+F = TypeVar('F', bound=Callable[..., Any])  # pylint: disable=invalid-name
+T = TypeVar('T')  # pylint: disable=invalid-name
 
 # Linters
 # pylint: disable=unsubscriptable-object
 
 
 def block(
-    function: Callable[..., Awaitable[_T]],
+    function: Callable[..., Awaitable[T]],
     *args: Any,
     **kwargs: Any,
-) -> _T:
+) -> T:
     """Execute an asynchronous function synchronously and return its result.
 
     Example:
@@ -252,7 +277,7 @@ def block(
     return asyncio.run(function(*args, **kwargs))
 
 
-def block_decorator(function: _F) -> _F:
+def block_decorator(function: F) -> F:
     """Decorator to turn an asynchronous function into a synchronous one.
 
     Example:
@@ -269,7 +294,7 @@ def block_decorator(function: _F) -> _F:
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         return block(function, *args, **kwargs)
 
-    return cast(_F, wrapper)
+    return cast(F, wrapper)
 
 
 class ExecutorPool:
@@ -317,11 +342,11 @@ async def force_loop_cycle() -> None:
 
 
 def resolve(  # noqa: mccabe
-    awaitables: Iterable[Awaitable[_T]],
+    awaitables: Iterable[Awaitable[T]],
     *,
     workers: int = 1024,
     worker_greediness: int = 0,
-) -> Iterable[Awaitable[_T]]:
+) -> Iterable[Awaitable[T]]:
     """Resolve concurrently the input stream and yield back in the same order.
 
     The algorithm makes sure that at any point in time every worker is busy.
@@ -436,24 +461,24 @@ def resolve(  # noqa: mccabe
             await force_loop_cycle()
         await workers_up.wait()
 
-    async def get_one(index: int) -> Awaitable[_T]:
+    async def get_one(index: int) -> Awaitable[T]:
         if not workers_tasks:
             await start_workers()
 
         awaitable = await store.pop(index).get()
-        result: Awaitable[_T] = (await awaitable).result()
+        result: Awaitable[T] = (await awaitable).result()
         return result
 
     for index, _ in stream_copy:
-        yield cast(Awaitable[_T], get_one(index))
+        yield cast(Awaitable[T], get_one(index))
 
 
 async def collect(
-    awaitables: Iterable[Awaitable[_T]],
+    awaitables: Iterable[Awaitable[T]],
     *,
     workers: int = 1024,
     worker_greediness: int = 0,
-) -> Tuple[_T, ...]:
+) -> Tuple[T, ...]:
     """Resolve concurrently the input stream and return back in the same order.
 
     See `resolve` for more information on the algorithm used and parameters.
@@ -497,10 +522,10 @@ async def collect(
 
 
 def schedule(
-    awaitable: Awaitable[_T],
+    awaitable: Awaitable[T],
     *,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> Awaitable[_T]:
+) -> Awaitable[T]:
     """Schedule an awaitable in the event loop and return a wrapper for it.
 
     """
@@ -516,10 +541,10 @@ def schedule(
 
 
 async def unblock(
-    function: Callable[..., _T],
+    function: Callable[..., T],
     *args: Any,
     **kwargs: Any,
-) -> _T:
+) -> T:
     """Execute function(*args, **kwargs) in the specified thread executor."""
     if not THREAD_POOL.initialized:
         THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
@@ -530,10 +555,10 @@ async def unblock(
 
 
 async def unblock_cpu(
-    function: Callable[..., _T],
+    function: Callable[..., T],
     *args: Any,
     **kwargs: Any,
-) -> _T:
+) -> T:
     """Execute function(*args, **kwargs) in the specified process executor."""
     if not PROCESS_POOL.initialized:
         PROCESS_POOL.initialize(max_workers=CPU_COUNT)
