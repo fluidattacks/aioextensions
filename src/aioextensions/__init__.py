@@ -14,7 +14,11 @@ Import:
 
     >>> from aioextensions import *  # to import everything
     >>> from aioextensions import (  # recommended way
-            # specific functions ...
+            unblock,
+            unblock_cpu,
+            resolve,
+            schedule,
+            # ...
         )
 """
 
@@ -71,12 +75,15 @@ def block(
 
     Example:
         >>> async def do(a, b=0):
+                await something
                 return a + b
 
-        >>> block(do, 1, b=2) == 3
+        >>> block(do, 1, b=2)
+
+        >>> 3
 
     This function acts as a drop-in replacement of asyncio.run and
-    installs `uvloop` (the fastest event-loop implementation) first.
+    installs `uvloop` (the fastest event-loop implementation out there) first.
 
     .. tip::
         Use this as the entrypoint for your program.
@@ -105,7 +112,7 @@ def block_decorator(function: _F) -> _F:
     return cast(_F, wrapper)
 
 
-class _ExecutorPool:
+class ExecutorPool:
 
     def __init__(
         self,
@@ -141,11 +148,10 @@ class _ExecutorPool:
 
 
 async def force_loop_cycle() -> None:
-    """Force the event loop to perform once cycle.
+    """Force the event loop to perform one cycle.
 
-    .. tip::
-        Can be used to suspend the execution of the current coroutine and yield
-        control back to the event-loop in order to execute another tasks.
+    This can be used to suspend the execution of the current coroutine and
+    yield control back to the event-loop.
     """
     await asyncio.sleep(0)
 
@@ -156,7 +162,86 @@ def resolve(  # noqa: mccabe
     workers: int = 1024,
     worker_greediness: int = 0,
 ) -> Iterable[Awaitable[_T]]:
-    """Resolve concurrently the iterable of awaitables using many workers."""
+    """Resolve concurrently the input stream and yield back in the same order.
+
+    The algorithm makes sure that at any point in time every worker is busy.
+    Also, at any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    The `worker_greediness` parameter controlls how much each worker can
+    process before waiting for you to retrieve results. This is important
+    when the input stream is big as it allows you to control the memory usage.
+
+    .. tip::
+        This is similar to asyncio.as_completed. However it allows you
+        to control how much resources are consumed throughout the execution,
+        for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
+
+    Usage:
+        >>> async def do(n):
+                print('running:', n)
+                await asyncio.sleep(1)
+                print('returning:', n)
+                return n
+
+        >>> iterable = map(do, range(5))
+
+        >>> for next in resolve(iterable, workers=2):
+                try:
+                    print('got resolved result:', await next)
+                except:
+                    pass  # Handle possible exceptions
+
+    Output:
+        ```
+        running: 0
+        running: 1
+        returning: 0
+        returning: 1
+        got resolved result: 0
+        got resolved result: 1
+        running: 2
+        running: 3
+        returning: 2
+        returning: 3
+        got resolved result: 2
+        got resolved result: 3
+        running: 4
+        returning: 4
+        got resolved result: 4
+        ```
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream (opposite to asyncio.as_completed)
+
+    .. tip::
+        This approach may be many times faster than batching because
+        workers are independent of each other and they are constantly fetching
+        the next task as soon as they get free (as long as the greediness
+        allows them).
+
+    .. tip::
+        If awaitables is an instance of Sized (has `__len__` prototype).
+        This function will launch at most `len(awaitables)` workers.
+    """
     if workers < 1:
         raise ValueError('workers must be >= 1')
     if worker_greediness < 0:
@@ -209,7 +294,38 @@ async def collect(
     workers: int = 1024,
     worker_greediness: int = 0,
 ) -> Tuple[_T, ...]:
-    """Collect concurrently the iterable of awaitables using many workers."""
+    """Resolve concurrently the input stream and return back in the same order.
+
+    See `resolve` for more information on the algorithm used and parameters.
+
+    Usage:
+        >>> async def do(n):
+                print('running:', n)
+                await asyncio.sleep(1)
+                print('returning:', n)
+                return n
+
+        >>> iterable = map(do, range(5))
+
+        >>> results = await collect(iterable, workers=2)
+
+        >>> print(results)
+
+    Output:
+        ```
+        running: 0
+        running: 1
+        returning: 0
+        returning: 1
+        running: 2
+        running: 3
+        returning: 2
+        returning: 3
+        running: 4
+        returning: 4
+        (0, 1, 2, 3, 4)
+        ```
+    """
     return tuple([
         await elem
         for elem in resolve(
@@ -225,7 +341,9 @@ def schedule(
     *,
     loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> Awaitable[_T]:
-    """Schedule an awaitable in the event loop and return a wrapper for it."""
+    """Schedule an awaitable in the event loop and return a wrapper for it.
+
+    """
     wrapper = (loop or asyncio.get_event_loop()).create_future()
 
     def _done_callback(future: asyncio.Future) -> None:
@@ -266,5 +384,5 @@ async def unblock_cpu(
 
 
 # Constants
-PROCESS_POOL: _ExecutorPool = _ExecutorPool(ProcessPoolExecutor)
-THREAD_POOL: _ExecutorPool = _ExecutorPool(ThreadPoolExecutor)
+PROCESS_POOL: ExecutorPool = ExecutorPool(ProcessPoolExecutor)
+THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)
