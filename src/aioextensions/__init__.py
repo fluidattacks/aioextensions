@@ -4,6 +4,9 @@
 [![Status](https://img.shields.io/pypi/status/aioextensions)](https://pypi.org/project/aioextensions)
 [![License](https://img.shields.io/pypi/l/aioextensions)](https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
 [![Downloads](https://img.shields.io/pypi/dm/aioextensions)](https://pypi.org/project/aioextensions)
+
+Usage:
+    >>> from aioextensions import *
 """
 
 # Standard library
@@ -55,13 +58,36 @@ def block(
     *args: Any,
     **kwargs: Any,
 ) -> _T:
-    """Execute an asynchronous function and return its result."""
+    """Execute an asynchronous function synchronously and return its result.
+
+    Example:
+        >>> async def do(a, b=0):
+                return a + b
+
+        >>> block(do, 1, b=2) == 3
+
+    This function acts as a drop-in replacement of asyncio.run and
+    installs `uvloop` (the fastest event-loop implementation) first.
+
+    .. tip::
+        Use this as the entrypoint for your program.
+    """
     uvloop.install()
     return asyncio.run(function(*args, **kwargs))
 
 
 def block_decorator(function: _F) -> _F:
-    """Decorator to execute an asynchronous function and return its result."""
+    """Decorator to turn an asynchronous function into a synchronous one.
+
+    Example:
+        >>> @block_decorator
+            async def do(a, b=0):
+                return a + b
+
+        >>> do(1, b=2) == 3
+
+    This can be used as a bridge between synchronous and asynchronous code.
+    """
 
     @wraps(function)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -107,6 +133,10 @@ class ExecutorPool:
 
 async def force_loop_cycle() -> None:
     """Force the event loop to perform once cycle.
+
+    .. tip::
+        Can be used to suspend the execution of the current coroutine and yield
+        control back to the event-loop in order to execute another tasks.
     """
     await asyncio.sleep(0)
 

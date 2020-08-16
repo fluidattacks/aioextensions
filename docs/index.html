@@ -27,10 +27,13 @@
 <a href="https://pypi.org/project/aioextensions"><img alt="Status" src="https://img.shields.io/pypi/status/aioextensions"></a>
 <a href="https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md"><img alt="License" src="https://img.shields.io/pypi/l/aioextensions"></a>
 <a href="https://pypi.org/project/aioextensions"><img alt="Downloads" src="https://img.shields.io/pypi/dm/aioextensions"></a></p>
+<h2 id="usage">Usage</h2>
+<pre><code class="python">&gt;&gt;&gt; from aioextensions import *
+</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L230" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L260" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;Python Asyncio Extensions
 
@@ -38,6 +41,9 @@
 [![Status](https://img.shields.io/pypi/status/aioextensions)](https://pypi.org/project/aioextensions)
 [![License](https://img.shields.io/pypi/l/aioextensions)](https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
 [![Downloads](https://img.shields.io/pypi/dm/aioextensions)](https://pypi.org/project/aioextensions)
+
+Usage:
+    &gt;&gt;&gt; from aioextensions import *
 &#34;&#34;&#34;
 
 # Standard library
@@ -89,13 +95,36 @@ def block(
     *args: Any,
     **kwargs: Any,
 ) -&gt; _T:
-    &#34;&#34;&#34;Execute an asynchronous function and return its result.&#34;&#34;&#34;
+    &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
+
+    Example:
+        &gt;&gt;&gt; async def do(a, b=0):
+                return a + b
+
+        &gt;&gt;&gt; block(do, 1, b=2) == 3
+
+    This function acts as a drop-in replacement of asyncio.run and
+    installs `uvloop` (the fastest event-loop implementation) first.
+
+    .. tip::
+        Use this as the entrypoint for your program.
+    &#34;&#34;&#34;
     uvloop.install()
     return asyncio.run(function(*args, **kwargs))
 
 
 def block_decorator(function: _F) -&gt; _F:
-    &#34;&#34;&#34;Decorator to execute an asynchronous function and return its result.&#34;&#34;&#34;
+    &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
+
+    Example:
+        &gt;&gt;&gt; @block_decorator
+            async def do(a, b=0):
+                return a + b
+
+        &gt;&gt;&gt; do(1, b=2) == 3
+
+    This can be used as a bridge between synchronous and asynchronous code.
+    &#34;&#34;&#34;
 
     @wraps(function)
     def wrapper(*args: Any, **kwargs: Any) -&gt; Any:
@@ -141,6 +170,10 @@ class ExecutorPool:
 
 async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform once cycle.
+
+    .. tip::
+        Can be used to suspend the execution of the current coroutine and yield
+        control back to the event-loop in order to execute another tasks.
     &#34;&#34;&#34;
     await asyncio.sleep(0)
 
@@ -276,18 +309,43 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <span>def <span class="ident">block</span></span>(<span>function: Callable[..., Awaitable[~_T]], *args: Any, **kwargs: Any) ‑> ~_T</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Execute an asynchronous function and return its result.</p></div>
+<div class="desc"><p>Execute an asynchronous function synchronously and return its result.</p>
+<h2 id="example">Example</h2>
+<pre><code class="python">&gt;&gt;&gt; async def do(a, b=0):
+        return a + b
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; block(do, 1, b=2) == 3
+</code></pre>
+<p>This function acts as a drop-in replacement of asyncio.run and
+installs <code>uvloop</code> (the fastest event-loop implementation) first.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Use this as the entrypoint for your program.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L53-L60" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L56-L76" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def block(
     function: Callable[..., Awaitable[_T]],
     *args: Any,
     **kwargs: Any,
 ) -&gt; _T:
-    &#34;&#34;&#34;Execute an asynchronous function and return its result.&#34;&#34;&#34;
+    &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
+
+    Example:
+        &gt;&gt;&gt; async def do(a, b=0):
+                return a + b
+
+        &gt;&gt;&gt; block(do, 1, b=2) == 3
+
+    This function acts as a drop-in replacement of asyncio.run and
+    installs `uvloop` (the fastest event-loop implementation) first.
+
+    .. tip::
+        Use this as the entrypoint for your program.
+    &#34;&#34;&#34;
     uvloop.install()
     return asyncio.run(function(*args, **kwargs))</code></pre>
 </details>
@@ -296,14 +354,32 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <span>def <span class="ident">block_decorator</span></span>(<span>function: ~_F) ‑> ~_F</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Decorator to execute an asynchronous function and return its result.</p></div>
+<div class="desc"><p>Decorator to turn an asynchronous function into a synchronous one.</p>
+<h2 id="example">Example</h2>
+<pre><code class="python">&gt;&gt;&gt; @block_decorator
+    async def do(a, b=0):
+        return a + b
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; do(1, b=2) == 3
+</code></pre>
+<p>This can be used as a bridge between synchronous and asynchronous code.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L63-L70" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L79-L96" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def block_decorator(function: _F) -&gt; _F:
-    &#34;&#34;&#34;Decorator to execute an asynchronous function and return its result.&#34;&#34;&#34;
+    &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
+
+    Example:
+        &gt;&gt;&gt; @block_decorator
+            async def do(a, b=0):
+                return a + b
+
+        &gt;&gt;&gt; do(1, b=2) == 3
+
+    This can be used as a bridge between synchronous and asynchronous code.
+    &#34;&#34;&#34;
 
     @wraps(function)
     def wrapper(*args: Any, **kwargs: Any) -&gt; Any:
@@ -320,7 +396,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L167-L181" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L197-L211" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[_T]],
@@ -343,14 +419,23 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <span>async def <span class="ident">force_loop_cycle</span></span>(<span>) ‑> NoneType</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Force the event loop to perform once cycle.</p></div>
+<div class="desc"><p>Force the event loop to perform once cycle.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Can be used to suspend the execution of the current coroutine and yield
+control back to the event-loop in order to execute another tasks.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L108-L111" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L134-L141" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform once cycle.
+
+    .. tip::
+        Can be used to suspend the execution of the current coroutine and yield
+        control back to the event-loop in order to execute another tasks.
     &#34;&#34;&#34;
     await asyncio.sleep(0)</code></pre>
 </details>
@@ -363,7 +448,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L114-L164" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L144-L194" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[_T]],
@@ -426,7 +511,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L184-L198" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L214-L228" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[_T],
@@ -453,7 +538,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L201-L212" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L231-L242" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def unblock(
     function: Callable[..., _T],
@@ -477,7 +562,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L215-L226" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L245-L256" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def unblock_cpu(
     function: Callable[..., _T],
@@ -507,7 +592,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L73-L105" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L99-L131" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
 
@@ -551,7 +636,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L103-L105" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L129-L131" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -564,7 +649,7 @@ def initialized(self) -&gt; bool:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L96-L101" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L122-L127" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -585,7 +670,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L85-L89" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L111-L115" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     if self._pool is not None:
@@ -602,7 +687,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L91-L94" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L117-L120" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     if self._pool is not None:
