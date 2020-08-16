@@ -5,8 +5,17 @@
 [![License](https://img.shields.io/pypi/l/aioextensions)](https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
 [![Downloads](https://img.shields.io/pypi/dm/aioextensions)](https://pypi.org/project/aioextensions)
 
-Usage:
-    >>> from aioextensions import *
+Install:
+    ```
+    $ pip install aioextensions
+    ```
+
+Import:
+
+    >>> from aioextensions import *  # to import everything
+    >>> from aioextensions import (  # recommended way
+            # specific functions ...
+        )
 """
 
 # Standard library
