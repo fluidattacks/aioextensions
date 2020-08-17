@@ -63,10 +63,11 @@ Examples of these tasks include:
 | Disk read (1MB)      |               0.02 |
 | HTTP to internet     |               0.15 |
 
-# Hardware costs
+# Speed and costs matter
 
 At the end of the day, we want to minimize the amount of cost per user served
-by the program, server, or service.
+by the program, server, or service while maximizing the user perception of
+speed.
 
 In order to achieve this we need a model that allows us to exploit all CPU
 cores and installed hardware in the machine, while maintaining the ability to
