@@ -137,11 +137,11 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
 <pre><code class="python">&gt;&gt;&gt; from aioextensions import collect, in_process, run
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; def cpu_bound_task(id: str):
-        print('doing:', id)
+        print(f'doing: {id}')
         # Imagine here something that uses a lot the CPU
         # For example: this complex mathematical operation
         for _ in range(10): 3**20000000
-        print('returning:', id)
+        print(f'returning: {id}')
         return id
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; async def main():
@@ -151,7 +151,7 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
             # Let's solve 5 of those tasks in parallel!
             for id in range(5)
         ])
-        print('results:', results)
+        print(f'results: {results}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; run(main())
 # I have 4 CPU cores in my machine
@@ -178,11 +178,11 @@ operations to complete.</p>
 &gt;&gt;&gt; from time import sleep, time
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; def io_bound_task(id: str):
-        print('time:', time(), 'doing:', id)
+        print(f'time: {time()}, doing: {id}')
         # Imagine here something with high latency
         # For example: a call to the database, or this sleep
         sleep(1)
-        print('time:', time(), 'returning:', id)
+        print(f'time: {time()}, returning: {id}')
         return id
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; async def main():
@@ -192,20 +192,20 @@ operations to complete.</p>
             # Let's solve 5 of those tasks concurrently!
             for id in range(5)
         ])
-        print('time:', time(), 'results:', results)
+        print(f'time: {time()}, results: {results}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; run(main)
-time: 1597623831 doing: 0
-time: 1597623831 doing: 1
-time: 1597623831 doing: 2
-time: 1597623831 doing: 3
-time: 1597623831 doing: 4
-time: 1597623832 returning: 0
-time: 1597623832 returning: 4
-time: 1597623832 returning: 3
-time: 1597623832 returning: 2
-time: 1597623832 returning: 1
-time: 1597623832 results: (0, 1, 2, 3, 4)
+time: 1597623831, doing: 0
+time: 1597623831, doing: 1
+time: 1597623831, doing: 2
+time: 1597623831, doing: 3
+time: 1597623831, doing: 4
+time: 1597623832, returning: 0
+time: 1597623832, returning: 4
+time: 1597623832, returning: 3
+time: 1597623832, returning: 2
+time: 1597623832, returning: 1
+time: 1597623832, results: (0, 1, 2, 3, 4)
 </code></pre>
 <p>As expected, all tasks were executed concurrently. This means that instead of
 waiting five seconds for five tasks (serially) we just waited one second for
@@ -220,7 +220,7 @@ all of them.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L793" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L829" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -337,11 +337,11 @@ Usage:
     &gt;&gt;&gt; from aioextensions import collect, in_process, run
 
     &gt;&gt;&gt; def cpu_bound_task(id: str):
-            print(&#39;doing:&#39;, id)
+            print(f&#39;doing: {id}&#39;)
             # Imagine here something that uses a lot the CPU
             # For example: this complex mathematical operation
             for _ in range(10): 3**20000000
-            print(&#39;returning:&#39;, id)
+            print(f&#39;returning: {id}&#39;)
             return id
 
     &gt;&gt;&gt; async def main():
@@ -351,7 +351,7 @@ Usage:
                 # Let&#39;s solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
-            print(&#39;results:&#39;, results)
+            print(f&#39;results: {results}&#39;)
 
     &gt;&gt;&gt; run(main())
     # I have 4 CPU cores in my machine
@@ -382,11 +382,11 @@ Usage:
     &gt;&gt;&gt; from time import sleep, time
 
     &gt;&gt;&gt; def io_bound_task(id: str):
-            print(&#39;time:&#39;, time(), &#39;doing:&#39;, id)
+            print(f&#39;time: {time()}, doing: {id}&#39;)
             # Imagine here something with high latency
             # For example: a call to the database, or this sleep
             sleep(1)
-            print(&#39;time:&#39;, time(), &#39;returning:&#39;, id)
+            print(f&#39;time: {time()}, returning: {id}&#39;)
             return id
 
     &gt;&gt;&gt; async def main():
@@ -396,20 +396,20 @@ Usage:
                 # Let&#39;s solve 5 of those tasks concurrently!
                 for id in range(5)
             ])
-            print(&#39;time:&#39;, time(), &#39;results:&#39;, results)
+            print(f&#39;time: {time()}, results: {results}&#39;)
 
     &gt;&gt;&gt; run(main)
-    time: 1597623831 doing: 0
-    time: 1597623831 doing: 1
-    time: 1597623831 doing: 2
-    time: 1597623831 doing: 3
-    time: 1597623831 doing: 4
-    time: 1597623832 returning: 0
-    time: 1597623832 returning: 4
-    time: 1597623832 returning: 3
-    time: 1597623832 returning: 2
-    time: 1597623832 returning: 1
-    time: 1597623832 results: (0, 1, 2, 3, 4)
+    time: 1597623831, doing: 0
+    time: 1597623831, doing: 1
+    time: 1597623831, doing: 2
+    time: 1597623831, doing: 3
+    time: 1597623831, doing: 4
+    time: 1597623832, returning: 0
+    time: 1597623832, returning: 4
+    time: 1597623832, returning: 3
+    time: 1597623832, returning: 2
+    time: 1597623832, returning: 1
+    time: 1597623832, results: (0, 1, 2, 3, 4)
 
 As expected, all tasks were executed concurrently. This means that instead of
 waiting five seconds for five tasks (serially) we just waited one second for
@@ -480,7 +480,7 @@ Y = TypeVar(&#39;Y&#39;)  # pylint: disable=invalid-name
 def run(coroutine: Awaitable[T], *, debug: bool = False) -&gt; T:
     &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
 
-    Example:
+    Usage:
 
         &gt;&gt;&gt; async def do(a, b=0):
                 await something
@@ -561,22 +561,30 @@ async def in_process(
 def rate_limited(
     *,
     max_calls: int,
-    over_seconds: Union[float, int],
+    max_calls_period: Union[float, int],
+    min_seconds_between_calls: Union[float, int] = 0,
 ) -&gt; Callable[[F], F]:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a rate limited one.
 
     The decorated function won&#39;t be able to execute more than `max_calls` times
-    over a period of `over_seconds` seconds. The excess will be queued in FIFO
-    mode.
+    over a period of `max_calls_period` seconds. The excess will be queued in
+    FIFO mode.
 
-    Example:
+    Aditionally, it&#39;s guaranteed that no successive calls can be performed
+    faster than `min_seconds_between_calls` seconds.
+
+    Usage:
 
         If you want to perform at most 2 calls to a database per second:
 
-        &gt;&gt;&gt; @rate_limited(max_calls=2, over_seconds=1.0)
+        &gt;&gt;&gt; @rate_limited(
+                max_calls=2,
+                max_calls_period=1,
+                min_seconds_between_calls=0.2,
+            )
             async def query(n):
                 await something
-                print(&#39;time:&#39;, time(), &#39;doing: &#39;, n)
+                print(f&#39;time: {time()}, doing: {n}&#39;)
 
         &gt;&gt;&gt; for n in range(10):
                 await query(n)
@@ -584,20 +592,29 @@ def rate_limited(
     Output:
 
         ```
-        time: 1597701092 doing: 0
-        time: 1597701092 doing: 1
-        time: 1597701093 doing: 2
-        time: 1597701093 doing: 3
-        time: 1597701094 doing: 4
-        time: 1597701094 doing: 5
-        time: 1597701095 doing: 6
-        time: 1597701095 doing: 7
-        time: 1597701096 doing: 8
-        time: 1597701096 doing: 9
+        time: 1597706698.0, doing: 0
+        time: 1597706698.2, doing: 1
+        time: 1597706699.0, doing: 2
+        time: 1597706699.2, doing: 3
+        time: 1597706700.0, doing: 4
+        time: 1597706700.2, doing: 5
+        time: 1597706701.0, doing: 6
+        time: 1597706701.2, doing: 7
+        time: 1597706702.0, doing: 8
+        time: 1597706702.2, doing: 9
         ```
 
-        Take into account that calls can still burst.
+    .. tip::
+        Use `min_seconds_between_calls` as an anti-burst system. This can, for
+        instance, lower your bill in DynamoDB or prevent a cooldown period
+        (also know as ban) by a firewall.
     &#34;&#34;&#34;
+    if max_calls &lt; 1:
+        raise ValueError(&#39;max_calls must be &gt;= 1&#39;)
+    if max_calls_period &lt;= 0:
+        raise ValueError(&#39;max_calls_period must be &gt; 0&#39;)
+    if min_seconds_between_calls &lt; 0:
+        raise ValueError(&#39;min_seconds_between_calls must be &gt;= 0&#39;)
 
     def decorator(function: F) -&gt; F:
         lock = None
@@ -611,9 +628,23 @@ def rate_limited(
             loop = asyncio.get_event_loop()
 
             async with lock:
+                if waits:
+                    # Anti burst control system:
+                    #   wait until the difference between the most recent call
+                    #   and the current call is &gt;= min_seconds_between_calls
+                    await asyncio.sleep(
+                        waits[-1] + min_seconds_between_calls - loop.time()
+                    )
+
                 while len(waits) &gt;= max_calls:
-                    await asyncio.sleep(waits.popleft() - loop.time())
-                waits.append(loop.time() + over_seconds)
+                    # Rate limit control system:
+                    #   wait until the least recent call and the current call
+                    #   is &gt;= max_calls_period
+                    await asyncio.sleep(
+                        waits.popleft() + max_calls_period - loop.time()
+                    )
+
+                waits.append(loop.time())
 
             return await function(*args, **kwargs)
 
@@ -640,16 +671,16 @@ async def collect(
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; results = await collect(iterable, workers=2)
 
-        &gt;&gt;&gt; print(results)
+        &gt;&gt;&gt; print(f&#39;results: {results}&#39;)
 
     Output:
         ```
@@ -663,7 +694,7 @@ async def collect(
         returning: 3
         running: 4
         returning: 4
-        (0, 1, 2, 3, 4)
+        results: (0, 1, 2, 3, 4)
         ```
 
     .. tip::
@@ -724,16 +755,16 @@ def resolve(  # noqa: mccabe
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await asyncio.sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; for next in resolve(iterable, workers=2):
                 try:
-                    print(&#39;got resolved result:&#39;, await next)
+                    print(f&#39;got resolved result: {await next}&#39;)
                 except:
                     pass  # Handle possible exceptions
 
@@ -877,9 +908,9 @@ def schedule(
     Usage:
 
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
 
         &gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 
@@ -887,7 +918,7 @@ def schedule(
 
         &gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 
-        &gt;&gt;&gt; print(task_result.result())  # may rise if do() raised
+        &gt;&gt;&gt; print(f&#39;result: {task_result.result()}&#39;)  # may rise if do() raised
 
     Output:
 
@@ -977,13 +1008,18 @@ class ExecutorPool:
 def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
 
-    Example:
+    Usage:
         &gt;&gt;&gt; @run_decorator
             async def do(a, b=0):
                 return a + b
 
-        &gt;&gt;&gt; do(1, b=2) == 3
+        &gt;&gt;&gt; do(1, b=2)
 
+    Output:
+
+        ```
+        3
+        ```
     This can be used as a bridge between synchronous and asynchronous code.
     We use it mostly in tests for its convenience over pytest-asyncio plugin.
     &#34;&#34;&#34;
@@ -1051,7 +1087,7 @@ or never launched otherwise.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Execute an asynchronous function synchronously and return its result.</p>
-<h2 id="example">Example</h2>
+<h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(a, b=0):
         await something
         return a + b
@@ -1074,7 +1110,7 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
 <pre><code class="python">def run(coroutine: Awaitable[T], *, debug: bool = False) -&gt; T:
     &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
 
-    Example:
+    Usage:
 
         &gt;&gt;&gt; async def do(a, b=0):
                 await something
@@ -1197,60 +1233,79 @@ expense.</p>
 </details>
 </dd>
 <dt id="aioextensions.rate_limited"><code class="name flex">
-<span>def <span class="ident">rate_limited</span></span>(<span>*, max_calls: int, over_seconds: Union[float, int]) ‑> Callable[[~F], ~F]</span>
+<span>def <span class="ident">rate_limited</span></span>(<span>*, max_calls: int, max_calls_period: Union[float, int], min_seconds_between_calls: Union[float, int] = 0) ‑> Callable[[~F], ~F]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Decorator to turn an asynchronous function into a rate limited one.</p>
 <p>The decorated function won't be able to execute more than <code>max_calls</code> times
-over a period of <code>over_seconds</code> seconds. The excess will be queued in FIFO
-mode.</p>
-<h2 id="example">Example</h2>
+over a period of <code>max_calls_period</code> seconds. The excess will be queued in
+FIFO mode.</p>
+<p>Aditionally, it's guaranteed that no successive calls can be performed
+faster than <code>min_seconds_between_calls</code> seconds.</p>
+<h2 id="usage">Usage</h2>
 <p>If you want to perform at most 2 calls to a database per second:</p>
-<pre><code class="python">&gt;&gt;&gt; @rate_limited(max_calls=2, over_seconds=1.0)
+<pre><code class="python">&gt;&gt;&gt; @rate_limited(
+        max_calls=2,
+        max_calls_period=1,
+        min_seconds_between_calls=0.2,
+    )
     async def query(n):
         await something
-        print('time:', time(), 'doing: ', n)
+        print(f'time: {time()}, doing: {n}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; for n in range(10):
         await query(n)
 </code></pre>
 <h2 id="output">Output</h2>
-<pre><code>time: 1597701092 doing: 0
-time: 1597701092 doing: 1
-time: 1597701093 doing: 2
-time: 1597701093 doing: 3
-time: 1597701094 doing: 4
-time: 1597701094 doing: 5
-time: 1597701095 doing: 6
-time: 1597701095 doing: 7
-time: 1597701096 doing: 8
-time: 1597701096 doing: 9
+<pre><code>time: 1597706698.0, doing: 0
+time: 1597706698.2, doing: 1
+time: 1597706699.0, doing: 2
+time: 1597706699.2, doing: 3
+time: 1597706700.0, doing: 4
+time: 1597706700.2, doing: 5
+time: 1597706701.0, doing: 6
+time: 1597706701.2, doing: 7
+time: 1597706702.0, doing: 8
+time: 1597706702.2, doing: 9
 </code></pre>
-<p>Take into account that calls can still burst.</p></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Use <code>min_seconds_between_calls</code> as an anti-burst system. This can, for
+instance, lower your bill in DynamoDB or prevent a cooldown period
+(also know as ban) by a firewall.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L337-L398" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L337-L429" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def rate_limited(
     *,
     max_calls: int,
-    over_seconds: Union[float, int],
+    max_calls_period: Union[float, int],
+    min_seconds_between_calls: Union[float, int] = 0,
 ) -&gt; Callable[[F], F]:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a rate limited one.
 
     The decorated function won&#39;t be able to execute more than `max_calls` times
-    over a period of `over_seconds` seconds. The excess will be queued in FIFO
-    mode.
+    over a period of `max_calls_period` seconds. The excess will be queued in
+    FIFO mode.
 
-    Example:
+    Aditionally, it&#39;s guaranteed that no successive calls can be performed
+    faster than `min_seconds_between_calls` seconds.
+
+    Usage:
 
         If you want to perform at most 2 calls to a database per second:
 
-        &gt;&gt;&gt; @rate_limited(max_calls=2, over_seconds=1.0)
+        &gt;&gt;&gt; @rate_limited(
+                max_calls=2,
+                max_calls_period=1,
+                min_seconds_between_calls=0.2,
+            )
             async def query(n):
                 await something
-                print(&#39;time:&#39;, time(), &#39;doing: &#39;, n)
+                print(f&#39;time: {time()}, doing: {n}&#39;)
 
         &gt;&gt;&gt; for n in range(10):
                 await query(n)
@@ -1258,20 +1313,29 @@ time: 1597701096 doing: 9
     Output:
 
         ```
-        time: 1597701092 doing: 0
-        time: 1597701092 doing: 1
-        time: 1597701093 doing: 2
-        time: 1597701093 doing: 3
-        time: 1597701094 doing: 4
-        time: 1597701094 doing: 5
-        time: 1597701095 doing: 6
-        time: 1597701095 doing: 7
-        time: 1597701096 doing: 8
-        time: 1597701096 doing: 9
+        time: 1597706698.0, doing: 0
+        time: 1597706698.2, doing: 1
+        time: 1597706699.0, doing: 2
+        time: 1597706699.2, doing: 3
+        time: 1597706700.0, doing: 4
+        time: 1597706700.2, doing: 5
+        time: 1597706701.0, doing: 6
+        time: 1597706701.2, doing: 7
+        time: 1597706702.0, doing: 8
+        time: 1597706702.2, doing: 9
         ```
 
-        Take into account that calls can still burst.
+    .. tip::
+        Use `min_seconds_between_calls` as an anti-burst system. This can, for
+        instance, lower your bill in DynamoDB or prevent a cooldown period
+        (also know as ban) by a firewall.
     &#34;&#34;&#34;
+    if max_calls &lt; 1:
+        raise ValueError(&#39;max_calls must be &gt;= 1&#39;)
+    if max_calls_period &lt;= 0:
+        raise ValueError(&#39;max_calls_period must be &gt; 0&#39;)
+    if min_seconds_between_calls &lt; 0:
+        raise ValueError(&#39;min_seconds_between_calls must be &gt;= 0&#39;)
 
     def decorator(function: F) -&gt; F:
         lock = None
@@ -1285,9 +1349,23 @@ time: 1597701096 doing: 9
             loop = asyncio.get_event_loop()
 
             async with lock:
+                if waits:
+                    # Anti burst control system:
+                    #   wait until the difference between the most recent call
+                    #   and the current call is &gt;= min_seconds_between_calls
+                    await asyncio.sleep(
+                        waits[-1] + min_seconds_between_calls - loop.time()
+                    )
+
                 while len(waits) &gt;= max_calls:
-                    await asyncio.sleep(waits.popleft() - loop.time())
-                waits.append(loop.time() + over_seconds)
+                    # Rate limit control system:
+                    #   wait until the least recent call and the current call
+                    #   is &gt;= max_calls_period
+                    await asyncio.sleep(
+                        waits.popleft() + max_calls_period - loop.time()
+                    )
+
+                waits.append(loop.time())
 
             return await function(*args, **kwargs)
 
@@ -1309,16 +1387,16 @@ process before waiting for you to retrieve results. This is important when
 the input stream is big as it allows you to control memory usage.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
-        print('running:', n)
+        print(f'running: {n}')
         await sleep(1)
-        print('returning:', n)
+        print(f'returning: {n}')
         return n
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; iterable = map(do, range(5))
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; results = await collect(iterable, workers=2)
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; print(results)
+<pre><code class="python">&gt;&gt;&gt; print(f'results: {results}')
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>running: 0
@@ -1331,7 +1409,7 @@ returning: 2
 returning: 3
 running: 4
 returning: 4
-(0, 1, 2, 3, 4)
+results: (0, 1, 2, 3, 4)
 </code></pre>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -1374,7 +1452,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L401-L487" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L432-L518" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[T]],
@@ -1394,16 +1472,16 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; results = await collect(iterable, workers=2)
 
-        &gt;&gt;&gt; print(results)
+        &gt;&gt;&gt; print(f&#39;results: {results}&#39;)
 
     Output:
         ```
@@ -1417,7 +1495,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
         returning: 3
         running: 4
         returning: 4
-        (0, 1, 2, 3, 4)
+        results: (0, 1, 2, 3, 4)
         ```
 
     .. tip::
@@ -1474,16 +1552,16 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 to handle exceptions on singular elements.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
-        print('running:', n)
+        print(f'running: {n}')
         await asyncio.sleep(1)
-        print('returning:', n)
+        print(f'returning: {n}')
         return n
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; iterable = map(do, range(5))
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; for next in resolve(iterable, workers=2):
         try:
-            print('got resolved result:', await next)
+            print(f'got resolved result: {await next}')
         except:
             pass  # Handle possible exceptions
 </code></pre>
@@ -1508,7 +1586,7 @@ got resolved result: 4
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L490-L580" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L521-L611" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[T]],
@@ -1523,16 +1601,16 @@ got resolved result: 4
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await asyncio.sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; for next in resolve(iterable, workers=2):
                 try:
-                    print(&#39;got resolved result:&#39;, await next)
+                    print(f&#39;got resolved result: {await next}&#39;)
                 except:
                     pass  # Handle possible exceptions
 
@@ -1618,7 +1696,7 @@ Useful for cooperative initialization.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L583-L597" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L614-L628" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform one cycle.
@@ -1663,7 +1741,7 @@ For instance, in a web server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L600-L643" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L631-L674" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def generate_in_thread(
     generator_func: Callable[..., Generator[Y, S, None]],
@@ -1718,9 +1796,9 @@ For instance, in a web server.</p></div>
 <div class="desc"><p>Schedule an awaitable in the event loop and return a wrapper for it.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
-        print('running:', n)
+        print(f'running: {n}')
         await sleep(1)
-        print('returning:', n)
+        print(f'returning: {n}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 </code></pre>
@@ -1728,7 +1806,7 @@ For instance, in a web server.</p></div>
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; print(task_result.result())  # may rise if do() raised
+<pre><code class="python">&gt;&gt;&gt; print(f'result: {task_result.result()}')  # may rise if do() raised
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>other work is being done here
@@ -1744,7 +1822,7 @@ the moment result() is called and never otherwise.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L646-L692" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L677-L723" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[T],
@@ -1756,9 +1834,9 @@ the moment result() is called and never otherwise.</p></div>
     Usage:
 
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
 
         &gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 
@@ -1766,7 +1844,7 @@ the moment result() is called and never otherwise.</p></div>
 
         &gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 
-        &gt;&gt;&gt; print(task_result.result())  # may rise if do() raised
+        &gt;&gt;&gt; print(f&#39;result: {task_result.result()}&#39;)  # may rise if do() raised
 
     Output:
 
@@ -1800,30 +1878,38 @@ the moment result() is called and never otherwise.</p></div>
 </code></dt>
 <dd>
 <div class="desc"><p>Decorator to turn an asynchronous function into a synchronous one.</p>
-<h2 id="example">Example</h2>
+<h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; @run_decorator
     async def do(a, b=0):
         return a + b
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; do(1, b=2) == 3
+<pre><code class="python">&gt;&gt;&gt; do(1, b=2)
+</code></pre>
+<h2 id="output">Output</h2>
+<pre><code>3
 </code></pre>
 <p>This can be used as a bridge between synchronous and asynchronous code.
 We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L753-L771" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L784-L807" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
 
-    Example:
+    Usage:
         &gt;&gt;&gt; @run_decorator
             async def do(a, b=0):
                 return a + b
 
-        &gt;&gt;&gt; do(1, b=2) == 3
+        &gt;&gt;&gt; do(1, b=2)
 
+    Output:
+
+        ```
+        3
+        ```
     This can be used as a bridge between synchronous and asynchronous code.
     We use it mostly in tests for its convenience over pytest-asyncio plugin.
     &#34;&#34;&#34;
@@ -1851,7 +1937,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L705-L750" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L736-L781" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
     &#34;&#34;&#34;Object representing a pool of Processes or Threads.
@@ -1908,7 +1994,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L739-L745" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L770-L776" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -1925,7 +2011,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L747-L750" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L778-L781" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -1946,7 +2032,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L721-L730" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L752-L761" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;Initialize the executor with a cap of at most `max_workers`.
@@ -1968,7 +2054,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L732-L737" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L763-L768" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
