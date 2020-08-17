@@ -15,8 +15,8 @@ from aioextensions import (
     PROCESS_POOL,
     resolve,
     THREAD_POOL,
-    unblock,
-    unblock_cpu,
+    in_thread,
+    in_process,
 )
 
 
@@ -57,10 +57,10 @@ def test_executor_pool() -> None:
 
 @run_decorator
 async def test_unblock() -> None:
-    await unblock(sync)
-    await unblock(sync)
-    await unblock_cpu(sync)
-    await unblock_cpu(sync)
+    await in_thread(sync)
+    await in_thread(sync)
+    await in_process(sync)
+    await in_process(sync)
 
 
 @run_decorator

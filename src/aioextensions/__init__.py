@@ -110,7 +110,7 @@ processses in order to bypass the [GIL](https://realpython.com/python-gil).
 
 Usage:
 
-    >>> from aioextensions import run, collect, unblock_cpu
+    >>> from aioextensions import collect, in_process, run
 
     >>> def cpu_bound_task(id: str):
             print('doing:', id)
@@ -122,8 +122,8 @@ Usage:
 
     >>> async def main():
             results = await collect([
-                # Unblock_cpu sends the task to a pool of processes
-                unblock_cpu(cpu_bound_task, id)
+                # in_process sends the task to a pool of processes
+                in_process(cpu_bound_task, id)
                 # Let's solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
@@ -154,7 +154,7 @@ operations to complete.
 
 Usage:
 
-    >>> from aioextensions import run, collect, unblock
+    >>> from aioextensions import collect, in_thread, run
     >>> from time import sleep, time
 
     >>> def io_bound_task(id: str):
@@ -167,8 +167,8 @@ Usage:
 
     >>> async def main():
             results = await collect([
-                # Unblock sends the task to a pool of threads
-                unblock(io_bound_task, id)
+                # in_thread sends the task to a pool of threads
+                in_thread(io_bound_task, id)
                 # Let's solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
@@ -199,8 +199,9 @@ second for all of them.
 
     >>> from aioextensions import *  # to import everything
     >>> from aioextensions import (  # recommended way
-            unblock,
-            unblock_cpu,
+            coolect,
+            in_thread,
+            in_process,
             resolve,
             schedule,
             # ...
@@ -274,12 +275,27 @@ def run(coroutine: Awaitable[T], *, debug: bool = False) -> T:
     return asyncio.run(coroutine, debug=debug)
 
 
-async def unblock(
+async def in_thread(
     function: Callable[..., T],
     *args: Any,
     **kwargs: Any,
 ) -> T:
-    """Execute function(*args, **kwargs) in the specified thread executor."""
+    """Execute function(*args, **kwargs) in the configured thread pool.
+
+    This is the most performant wrapper for IO bound and high-latency tasks.
+
+    Every task will be assigned at most one thread, if there are more tasks
+    than threads in the pool the excess will be executed in FIFO order.
+
+    Spawning a million IO bound tasks with this function has a very small
+    memory footprint.
+
+    .. warning::
+        Executing CPU intensive work here is a bad idea because of the limitations
+        that the [GIL](https://realpython.com/python-gil) imposes.
+
+        See `in_process` for a CPU performant alternative.
+    """
     if not THREAD_POOL.initialized:
         THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
 
@@ -288,12 +304,29 @@ async def unblock(
     )
 
 
-async def unblock_cpu(
+async def in_process(
     function: Callable[..., T],
     *args: Any,
     **kwargs: Any,
 ) -> T:
-    """Execute function(*args, **kwargs) in the specified process executor."""
+    """Execute function(*args, **kwargs) in the configured process pool.
+
+    This is the most performant wrapper for CPU bound and low-latency tasks.
+
+    Tasks executed in a process pool bypass the
+    [GIL](https://realpython.com/python-gil) and can consume all CPU cores
+    available in the host if needed.
+
+    Every task will be assigned at most one process, if there are more tasks
+    than processes in the pool the excess will be executed in FIFO order.
+
+    .. warning::
+        Executing IO intensive work here is possible, but spawning a process
+        has some overhead that can be avoided using threads at no performance
+        expense.
+
+        See `in_thread` for an IO performant alternative.
+    """
     if not PROCESS_POOL.initialized:
         PROCESS_POOL.initialize(max_workers=CPU_COUNT)
 

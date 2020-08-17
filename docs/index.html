@@ -134,7 +134,7 @@ while the remaining ones are waiting the
 <p>The optimal way to perform CPU bound tasks is to send them to separate
 processses in order to bypass the <a href="https://realpython.com/python-gil">GIL</a>.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="python">&gt;&gt;&gt; from aioextensions import block, collect, unblock_cpu
+<pre><code class="python">&gt;&gt;&gt; from aioextensions import collect, in_process, run
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; def cpu_bound_task(id: str):
         print('doing:', id)
@@ -146,14 +146,14 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; async def main():
         results = await collect([
-            # Unblock_cpu sends the task to a pool of processes
-            unblock_cpu(cpu_bound_task, id)
+            # in_process sends the task to a pool of processes
+            in_process(cpu_bound_task, id)
             # Let's solve 5 of those tasks in parallel!
             for id in range(5)
         ])
         print('results:', results)
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; block(main)
+<pre><code class="python">&gt;&gt;&gt; run(main())
 # I have 4 CPU cores in my machine
 doing: 0
 doing: 1
@@ -174,7 +174,7 @@ threads. This does not bypass the <a href="https://realpython.com/python-gil">GI
 However, threads will be in idle state most of the time, waiting high-latency
 operations to complete.</p>
 <h2 id="usage_1">Usage</h2>
-<pre><code class="python">&gt;&gt;&gt; from aioextensions import block, collect, unblock
+<pre><code class="python">&gt;&gt;&gt; from aioextensions import collect, in_thread, run
 &gt;&gt;&gt; from time import sleep, time
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; def io_bound_task(id: str):
@@ -187,14 +187,14 @@ operations to complete.</p>
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; async def main():
         results = await collect([
-            # Unblock sends the task to a pool of threads
-            unblock(io_bound_task, id)
+            # in_thread sends the task to a pool of threads
+            in_thread(io_bound_task, id)
             # Let's solve 5 of those tasks in parallel!
             for id in range(5)
         ])
         print('time:', time(), 'results:', results)
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; block(main)
+<pre><code class="python">&gt;&gt;&gt; run(main)
 time: 1597623831 doing: 0
 time: 1597623831 doing: 1
 time: 1597623831 doing: 2
@@ -216,8 +216,9 @@ second for all of them.</p>
 <h1 id="using">Using</h1>
 <pre><code>&gt;&gt;&gt; from aioextensions import *  # to import everything
 &gt;&gt;&gt; from aioextensions import (  # recommended way
-        unblock,
-        unblock_cpu,
+        coolect,
+        in_thread,
+        in_process,
         resolve,
         schedule,
         # ...
@@ -227,7 +228,7 @@ second for all of them.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L573" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L606" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -341,7 +342,7 @@ processses in order to bypass the [GIL](https://realpython.com/python-gil).
 
 Usage:
 
-    &gt;&gt;&gt; from aioextensions import block, collect, unblock_cpu
+    &gt;&gt;&gt; from aioextensions import collect, in_process, run
 
     &gt;&gt;&gt; def cpu_bound_task(id: str):
             print(&#39;doing:&#39;, id)
@@ -353,14 +354,14 @@ Usage:
 
     &gt;&gt;&gt; async def main():
             results = await collect([
-                # Unblock_cpu sends the task to a pool of processes
-                unblock_cpu(cpu_bound_task, id)
+                # in_process sends the task to a pool of processes
+                in_process(cpu_bound_task, id)
                 # Let&#39;s solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
             print(&#39;results:&#39;, results)
 
-    &gt;&gt;&gt; block(main)
+    &gt;&gt;&gt; run(main())
     # I have 4 CPU cores in my machine
     doing: 0
     doing: 1
@@ -385,7 +386,7 @@ operations to complete.
 
 Usage:
 
-    &gt;&gt;&gt; from aioextensions import block, collect, unblock
+    &gt;&gt;&gt; from aioextensions import collect, in_thread, run
     &gt;&gt;&gt; from time import sleep, time
 
     &gt;&gt;&gt; def io_bound_task(id: str):
@@ -398,14 +399,14 @@ Usage:
 
     &gt;&gt;&gt; async def main():
             results = await collect([
-                # Unblock sends the task to a pool of threads
-                unblock(io_bound_task, id)
+                # in_thread sends the task to a pool of threads
+                in_thread(io_bound_task, id)
                 # Let&#39;s solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
             print(&#39;time:&#39;, time(), &#39;results:&#39;, results)
 
-    &gt;&gt;&gt; block(main)
+    &gt;&gt;&gt; run(main)
     time: 1597623831 doing: 0
     time: 1597623831 doing: 1
     time: 1597623831 doing: 2
@@ -430,8 +431,9 @@ second for all of them.
 
     &gt;&gt;&gt; from aioextensions import *  # to import everything
     &gt;&gt;&gt; from aioextensions import (  # recommended way
-            unblock,
-            unblock_cpu,
+            coolect,
+            in_thread,
+            in_process,
             resolve,
             schedule,
             # ...
@@ -483,11 +485,7 @@ T = TypeVar(&#39;T&#39;)  # pylint: disable=invalid-name
 # pylint: disable=unsubscriptable-object
 
 
-def block(
-    function: Callable[..., Awaitable[T]],
-    *args: Any,
-    **kwargs: Any,
-) -&gt; T:
+def run(coroutine: Awaitable[T], *, debug: bool = False) -&gt; T:
     &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
 
     Example:
@@ -495,7 +493,7 @@ def block(
                 await something
                 return a + b
 
-        &gt;&gt;&gt; block(do, 1, b=2)
+        &gt;&gt;&gt; run(do(1, b=2))
 
         &gt;&gt;&gt; 3
 
@@ -506,71 +504,157 @@ def block(
         Use this as the entrypoint for your program.
     &#34;&#34;&#34;
     uvloop.install()
-    return asyncio.run(function(*args, **kwargs))
+    return asyncio.run(coroutine, debug=debug)
 
 
-def block_decorator(function: F) -&gt; F:
-    &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
+async def in_thread(
+    function: Callable[..., T],
+    *args: Any,
+    **kwargs: Any,
+) -&gt; T:
+    &#34;&#34;&#34;Execute function(*args, **kwargs) in the configured thread pool.
 
-    Example:
-        &gt;&gt;&gt; @block_decorator
-            async def do(a, b=0):
-                return a + b
+    This is the most performant wrapper for IO bound and high-latency tasks.
 
-        &gt;&gt;&gt; do(1, b=2) == 3
+    Every task will be assigned at most one thread, if there are more tasks
+    than threads in the pool the excess will be executed in FIFO order.
 
-    This can be used as a bridge between synchronous and asynchronous code.
+    Spawning a million IO bound tasks with this function has a very small
+    memory footprint.
+
+    .. warning::
+        Executing CPU intensive work here is a bad idea because of the limitations
+        that the [GIL](https://realpython.com/python-gil) imposes.
+
+        See `in_process` for a CPU performant alternative.
     &#34;&#34;&#34;
+    if not THREAD_POOL.initialized:
+        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
 
-    @wraps(function)
-    def wrapper(*args: Any, **kwargs: Any) -&gt; Any:
-        return block(function, *args, **kwargs)
-
-    return cast(F, wrapper)
-
-
-class ExecutorPool:
-
-    def __init__(
-        self,
-        cls: Union[
-            Type[ProcessPoolExecutor],
-            Type[ThreadPoolExecutor],
-        ],
-    ) -&gt; None:
-        self._cls = cls
-        self._pool: Optional[Executor] = None
-
-    def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
-        if self._pool is not None:
-            self._pool.shutdown(wait=False)
-
-        self._pool = self._cls(max_workers=max_workers)
-
-    def shutdown(self, *, wait: bool) -&gt; None:
-        if self._pool is not None:
-            self._pool.shutdown(wait=wait)
-            self._pool = None
-
-    @property
-    def pool(self) -&gt; Executor:
-        if self._pool is None:
-            raise RuntimeError(&#39;Must call initialize first&#39;)
-
-        return self._pool
-
-    @property
-    def initialized(self) -&gt; bool:
-        return self._pool is not None
+    return await asyncio.get_running_loop().run_in_executor(
+        THREAD_POOL.pool, partial(function, *args, **kwargs),
+    )
 
 
-async def force_loop_cycle() -&gt; None:
-    &#34;&#34;&#34;Force the event loop to perform one cycle.
+async def in_process(
+    function: Callable[..., T],
+    *args: Any,
+    **kwargs: Any,
+) -&gt; T:
+    &#34;&#34;&#34;Execute function(*args, **kwargs) in the configured process pool.
 
-    This can be used to suspend the execution of the current coroutine and
-    yield control back to the event-loop.
+    This is the most performant wrapper for CPU bound and low-latency tasks.
+
+    Tasks executed in a process pool bypass the
+    [GIL](https://realpython.com/python-gil) and can consume all CPU cores
+    available in the host if needed.
+
+    Every task will be assigned at most one process, if there are more tasks
+    than processes in the pool the excess will be executed in FIFO order.
+
+    .. warning::
+        Executing IO intensive work here is possible, but spawning a process
+        has some overhead that can be avoided using threads at no performance
+        expense.
+
+        See `in_thread` for an IO performant alternative.
     &#34;&#34;&#34;
-    await asyncio.sleep(0)
+    if not PROCESS_POOL.initialized:
+        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+
+    return await asyncio.get_running_loop().run_in_executor(
+        PROCESS_POOL.pool, partial(function, *args, **kwargs),
+    )
+
+
+async def collect(
+    awaitables: Iterable[Awaitable[T]],
+    *,
+    workers: int = 1024,
+    worker_greediness: int = 0,
+) -&gt; Tuple[T, ...]:
+    &#34;&#34;&#34;Resolve concurrently the input stream and return back in the same order.
+
+    The algorithm makes sure that at any point in time every worker is busy.
+    Also, at any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    The `worker_greediness` parameter controlls how much each worker can
+    process before waiting for you to retrieve results. This is important when
+    the input stream is big as it allows you to control memory usage.
+
+    .. tip::
+        This is similar to asyncio.as_completed. However this returns results
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
+
+    Usage:
+        &gt;&gt;&gt; async def do(n):
+                print(&#39;running:&#39;, n)
+                await asyncio.sleep(1)
+                print(&#39;returning:&#39;, n)
+                return n
+
+        &gt;&gt;&gt; iterable = map(do, range(5))
+
+        &gt;&gt;&gt; results = await collect(iterable, workers=2)
+
+        &gt;&gt;&gt; print(results)
+
+    Output:
+        ```
+        running: 0
+        running: 1
+        returning: 0
+        returning: 1
+        running: 2
+        running: 3
+        returning: 2
+        returning: 3
+        running: 4
+        returning: 4
+        (0, 1, 2, 3, 4)
+        ```
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream (opposite to asyncio.as_completed)
+
+    .. tip::
+        This approach may be many times faster than batching because
+        workers are independent of each other and they are constantly fetching
+        the next task as soon as they get free (as long as the greediness
+        allows them).
+
+    .. tip::
+        If awaitables is an instance of Sized (has `__len__` prototype).
+        This function will launch at most `len(awaitables)` workers.
+    &#34;&#34;&#34;
+    return tuple([
+        await elem
+        for elem in resolve(
+            awaitables,
+            workers=workers,
+            worker_greediness=worker_greediness,
+        )
+    ])
 
 
 def resolve(  # noqa: mccabe
@@ -581,27 +665,8 @@ def resolve(  # noqa: mccabe
 ) -&gt; Iterable[Awaitable[T]]:
     &#34;&#34;&#34;Resolve concurrently the input stream and yield back in the same order.
 
-    The algorithm makes sure that at any point in time every worker is busy.
-    Also, at any point in time there will be at most _number of `workers`_
-    tasks being resolved concurrently.
-
-    The `worker_greediness` parameter controlls how much each worker can
-    process before waiting for you to retrieve results. This is important
-    when the input stream is big as it allows you to control the memory usage.
-
-    .. tip::
-        This is similar to asyncio.as_completed. However it allows you
-        to control how much resources are consumed throughout the execution,
-        for instance:
-
-        - How many open files will be opened at the same time
-        - How many HTTP requests will be performed to a service (rate limit)
-        - How many sockets will be opened concurrently
-        - Etc
-
-        This is useful for finite resources, for instance: the number
-        of sockets provided by the operative system is limited; going beyond it
-        would make the kernel to kill the program abruptly.
+    This works very similar to `collect` except it&#39;s lazy and allows you
+    to handle exceptions on singular elements.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -637,27 +702,7 @@ def resolve(  # noqa: mccabe
         got resolved result: 4
         ```
 
-    Args:
-        awaitables: An iterable (generator, list, tuple, set, etc) of
-            awaitables (coroutine, asyncio.Task, or asyncio.Future).
-        workers: The number of independent workers that will be processing
-            the input stream.
-        worker_greediness: How much tasks can a worker process before waiting
-            for you to retrieve its results. 0 means unlimited.
-
-    Yields:
-        A future with the result of the next ready task. Futures are yielded in
-        the same order of the input stream (opposite to asyncio.as_completed)
-
-    .. tip::
-        This approach may be many times faster than batching because
-        workers are independent of each other and they are constantly fetching
-        the next task as soon as they get free (as long as the greediness
-        allows them).
-
-    .. tip::
-        If awaitables is an instance of Sized (has `__len__` prototype).
-        This function will launch at most `len(awaitables)` workers.
+    See `collect` for more information on the algorithm used and parameters.
     &#34;&#34;&#34;
     if workers &lt; 1:
         raise ValueError(&#39;workers must be &gt;= 1&#39;)
@@ -705,52 +750,48 @@ def resolve(  # noqa: mccabe
         yield cast(Awaitable[T], get_one(index))
 
 
-async def collect(
-    awaitables: Iterable[Awaitable[T]],
-    *,
-    workers: int = 1024,
-    worker_greediness: int = 0,
-) -&gt; Tuple[T, ...]:
-    &#34;&#34;&#34;Resolve concurrently the input stream and return back in the same order.
+class ExecutorPool:
 
-    See `resolve` for more information on the algorithm used and parameters.
+    def __init__(
+        self,
+        cls: Union[
+            Type[ProcessPoolExecutor],
+            Type[ThreadPoolExecutor],
+        ],
+    ) -&gt; None:
+        self._cls = cls
+        self._pool: Optional[Executor] = None
 
-    Usage:
-        &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
-                await asyncio.sleep(1)
-                print(&#39;returning:&#39;, n)
-                return n
+    def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=False)
 
-        &gt;&gt;&gt; iterable = map(do, range(5))
+        self._pool = self._cls(max_workers=max_workers)
 
-        &gt;&gt;&gt; results = await collect(iterable, workers=2)
+    def shutdown(self, *, wait: bool) -&gt; None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=wait)
+            self._pool = None
 
-        &gt;&gt;&gt; print(results)
+    @property
+    def pool(self) -&gt; Executor:
+        if self._pool is None:
+            raise RuntimeError(&#39;Must call initialize first&#39;)
 
-    Output:
-        ```
-        running: 0
-        running: 1
-        returning: 0
-        returning: 1
-        running: 2
-        running: 3
-        returning: 2
-        returning: 3
-        running: 4
-        returning: 4
-        (0, 1, 2, 3, 4)
-        ```
+        return self._pool
+
+    @property
+    def initialized(self) -&gt; bool:
+        return self._pool is not None
+
+
+async def force_loop_cycle() -&gt; None:
+    &#34;&#34;&#34;Force the event loop to perform one cycle.
+
+    This can be used to suspend the execution of the current coroutine and
+    yield control back to the event-loop until the next cycle.
     &#34;&#34;&#34;
-    return tuple([
-        await elem
-        for elem in resolve(
-            awaitables,
-            workers=workers,
-            worker_greediness=worker_greediness,
-        )
-    ])
+    await asyncio.sleep(0)
 
 
 def schedule(
@@ -772,32 +813,25 @@ def schedule(
     return wrapper
 
 
-async def unblock(
-    function: Callable[..., T],
-    *args: Any,
-    **kwargs: Any,
-) -&gt; T:
-    &#34;&#34;&#34;Execute function(*args, **kwargs) in the specified thread executor.&#34;&#34;&#34;
-    if not THREAD_POOL.initialized:
-        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
+def run_decorator(function: F) -&gt; F:
+    &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
 
-    return await asyncio.get_running_loop().run_in_executor(
-        THREAD_POOL.pool, partial(function, *args, **kwargs),
-    )
+    Example:
+        &gt;&gt;&gt; @run_decorator
+            async def do(a, b=0):
+                return a + b
 
+        &gt;&gt;&gt; do(1, b=2) == 3
 
-async def unblock_cpu(
-    function: Callable[..., T],
-    *args: Any,
-    **kwargs: Any,
-) -&gt; T:
-    &#34;&#34;&#34;Execute function(*args, **kwargs) in the specified process executor.&#34;&#34;&#34;
-    if not PROCESS_POOL.initialized:
-        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+    This can be used as a bridge between synchronous and asynchronous code.
+    We use it mostly in tests for its convenience over pytest-asyncio plugin.
+    &#34;&#34;&#34;
 
-    return await asyncio.get_running_loop().run_in_executor(
-        PROCESS_POOL.pool, partial(function, *args, **kwargs),
-    )
+    @wraps(function)
+    def wrapper(*args: Any, **kwargs: Any) -&gt; Any:
+        return run(function(*args, **kwargs))
+
+    return cast(F, wrapper)
 
 
 # Constants
@@ -812,8 +846,8 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="aioextensions.block"><code class="name flex">
-<span>def <span class="ident">block</span></span>(<span>function: Callable[..., Awaitable[~T]], *args: Any, **kwargs: Any) ‑> ~T</span>
+<dt id="aioextensions.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>coroutine: Awaitable[~T], *, debug: bool = False) ‑> ~T</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Execute an asynchronous function synchronously and return its result.</p>
@@ -822,7 +856,7 @@ THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)</code></pre>
         await something
         return a + b
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; block(do, 1, b=2)
+<pre><code class="python">&gt;&gt;&gt; run(do(1, b=2))
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; 3
 </code></pre>
@@ -835,13 +869,9 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L255-L278" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L256-L275" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def block(
-    function: Callable[..., Awaitable[T]],
-    *args: Any,
-    **kwargs: Any,
-) -&gt; T:
+<pre><code class="python">def run(coroutine: Awaitable[T], *, debug: bool = False) -&gt; T:
     &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
 
     Example:
@@ -849,7 +879,7 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
                 await something
                 return a + b
 
-        &gt;&gt;&gt; block(do, 1, b=2)
+        &gt;&gt;&gt; run(do(1, b=2))
 
         &gt;&gt;&gt; 3
 
@@ -860,45 +890,111 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
         Use this as the entrypoint for your program.
     &#34;&#34;&#34;
     uvloop.install()
-    return asyncio.run(function(*args, **kwargs))</code></pre>
+    return asyncio.run(coroutine, debug=debug)</code></pre>
 </details>
 </dd>
-<dt id="aioextensions.block_decorator"><code class="name flex">
-<span>def <span class="ident">block_decorator</span></span>(<span>function: ~F) ‑> ~F</span>
+<dt id="aioextensions.in_thread"><code class="name flex">
+<span>async def <span class="ident">in_thread</span></span>(<span>function: Callable[..., ~T], *args: Any, **kwargs: Any) ‑> ~T</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Decorator to turn an asynchronous function into a synchronous one.</p>
-<h2 id="example">Example</h2>
-<pre><code class="python">&gt;&gt;&gt; @block_decorator
-    async def do(a, b=0):
-        return a + b
-</code></pre>
-<pre><code class="python">&gt;&gt;&gt; do(1, b=2) == 3
-</code></pre>
-<p>This can be used as a bridge between synchronous and asynchronous code.</p></div>
+<div class="desc"><p>Execute function(<em>args, </em>*kwargs) in the configured thread pool.</p>
+<p>This is the most performant wrapper for IO bound and high-latency tasks.</p>
+<p>Every task will be assigned at most one thread, if there are more tasks
+than threads in the pool the excess will be executed in FIFO order.</p>
+<p>Spawning a million IO bound tasks with this function has a very small
+memory footprint.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Executing CPU intensive work here is a bad idea because of the limitations
+that the <a href="https://realpython.com/python-gil">GIL</a> imposes.</p>
+<p>See <code><a title="aioextensions.in_process" href="#aioextensions.in_process">in_process()</a></code> for a CPU performant alternative.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L281-L298" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L278-L304" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">def block_decorator(function: F) -&gt; F:
-    &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
+<pre><code class="python">async def in_thread(
+    function: Callable[..., T],
+    *args: Any,
+    **kwargs: Any,
+) -&gt; T:
+    &#34;&#34;&#34;Execute function(*args, **kwargs) in the configured thread pool.
 
-    Example:
-        &gt;&gt;&gt; @block_decorator
-            async def do(a, b=0):
-                return a + b
+    This is the most performant wrapper for IO bound and high-latency tasks.
 
-        &gt;&gt;&gt; do(1, b=2) == 3
+    Every task will be assigned at most one thread, if there are more tasks
+    than threads in the pool the excess will be executed in FIFO order.
 
-    This can be used as a bridge between synchronous and asynchronous code.
+    Spawning a million IO bound tasks with this function has a very small
+    memory footprint.
+
+    .. warning::
+        Executing CPU intensive work here is a bad idea because of the limitations
+        that the [GIL](https://realpython.com/python-gil) imposes.
+
+        See `in_process` for a CPU performant alternative.
     &#34;&#34;&#34;
+    if not THREAD_POOL.initialized:
+        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
 
-    @wraps(function)
-    def wrapper(*args: Any, **kwargs: Any) -&gt; Any:
-        return block(function, *args, **kwargs)
+    return await asyncio.get_running_loop().run_in_executor(
+        THREAD_POOL.pool, partial(function, *args, **kwargs),
+    )</code></pre>
+</details>
+</dd>
+<dt id="aioextensions.in_process"><code class="name flex">
+<span>async def <span class="ident">in_process</span></span>(<span>function: Callable[..., ~T], *args: Any, **kwargs: Any) ‑> ~T</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Execute function(<em>args, </em>*kwargs) in the configured process pool.</p>
+<p>This is the most performant wrapper for CPU bound and low-latency tasks.</p>
+<p>Tasks executed in a process pool bypass the
+<a href="https://realpython.com/python-gil">GIL</a> and can consume all CPU cores
+available in the host if needed.</p>
+<p>Every task will be assigned at most one process, if there are more tasks
+than processes in the pool the excess will be executed in FIFO order.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Executing IO intensive work here is possible, but spawning a process
+has some overhead that can be avoided using threads at no performance
+expense.</p>
+<p>See <code><a title="aioextensions.in_thread" href="#aioextensions.in_thread">in_thread()</a></code> for an IO performant alternative.</p>
+</div></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L307-L335" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">async def in_process(
+    function: Callable[..., T],
+    *args: Any,
+    **kwargs: Any,
+) -&gt; T:
+    &#34;&#34;&#34;Execute function(*args, **kwargs) in the configured process pool.
 
-    return cast(F, wrapper)</code></pre>
+    This is the most performant wrapper for CPU bound and low-latency tasks.
+
+    Tasks executed in a process pool bypass the
+    [GIL](https://realpython.com/python-gil) and can consume all CPU cores
+    available in the host if needed.
+
+    Every task will be assigned at most one process, if there are more tasks
+    than processes in the pool the excess will be executed in FIFO order.
+
+    .. warning::
+        Executing IO intensive work here is possible, but spawning a process
+        has some overhead that can be avoided using threads at no performance
+        expense.
+
+        See `in_thread` for an IO performant alternative.
+    &#34;&#34;&#34;
+    if not PROCESS_POOL.initialized:
+        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+
+    return await asyncio.get_running_loop().run_in_executor(
+        PROCESS_POOL.pool, partial(function, *args, **kwargs),
+    )</code></pre>
 </details>
 </dd>
 <dt id="aioextensions.collect"><code class="name flex">
@@ -906,7 +1002,27 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve concurrently the input stream and return back in the same order.</p>
-<p>See <code><a title="aioextensions.resolve" href="#aioextensions.resolve">resolve()</a></code> for more information on the algorithm used and parameters.</p>
+<p>The algorithm makes sure that at any point in time every worker is busy.
+Also, at any point in time there will be at most <em>number of <code>workers</code></em>
+tasks being resolved concurrently.</p>
+<p>The <code>worker_greediness</code> parameter controlls how much each worker can
+process before waiting for you to retrieve results. This is important when
+the input stream is big as it allows you to control memory usage.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This is similar to asyncio.as_completed. However this returns results
+in order and allows you to control how much resources are consumed
+throughout the execution, for instance:</p>
+<ul>
+<li>How many open files will be opened at the same time</li>
+<li>How many HTTP requests will be performed to a service (rate limit)</li>
+<li>How many sockets will be opened concurrently</li>
+<li>Etc</li>
+</ul>
+<p>This is useful for finite resources, for instance: the number
+of sockets provided by the operative system is limited; going beyond it
+would make the kernel to kill the program abruptly.</p>
+</div>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
         print('running:', n)
@@ -932,11 +1048,35 @@ returning: 3
 running: 4
 returning: 4
 (0, 1, 2, 3, 4)
-</code></pre></div>
+</code></pre>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>awaitables</code></strong></dt>
+<dd>An iterable (generator, list, tuple, set, etc) of
+awaitables (coroutine, asyncio.Task, or asyncio.Future).</dd>
+<dt><strong><code>workers</code></strong></dt>
+<dd>The number of independent workers that will be processing
+the input stream.</dd>
+<dt><strong><code>worker_greediness</code></strong></dt>
+<dd>How much tasks can a worker process before waiting
+for you to retrieve its results. 0 means unlimited.</dd>
+</dl>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This approach may be many times faster than batching because
+workers are independent of each other and they are constantly fetching
+the next task as soon as they get free (as long as the greediness
+allows them).</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If awaitables is an instance of Sized (has <code>__len__</code> prototype).
+This function will launch at most <code>len(awaitables)</code> workers.</p>
+</div></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L477-L522" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L338-L425" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[T]],
@@ -946,7 +1086,27 @@ returning: 4
 ) -&gt; Tuple[T, ...]:
     &#34;&#34;&#34;Resolve concurrently the input stream and return back in the same order.
 
-    See `resolve` for more information on the algorithm used and parameters.
+    The algorithm makes sure that at any point in time every worker is busy.
+    Also, at any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    The `worker_greediness` parameter controlls how much each worker can
+    process before waiting for you to retrieve results. This is important when
+    the input stream is big as it allows you to control memory usage.
+
+    .. tip::
+        This is similar to asyncio.as_completed. However this returns results
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -975,6 +1135,28 @@ returning: 4
         returning: 4
         (0, 1, 2, 3, 4)
         ```
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream (opposite to asyncio.as_completed)
+
+    .. tip::
+        This approach may be many times faster than batching because
+        workers are independent of each other and they are constantly fetching
+        the next task as soon as they get free (as long as the greediness
+        allows them).
+
+    .. tip::
+        If awaitables is an instance of Sized (has `__len__` prototype).
+        This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     return tuple([
         await elem
@@ -986,53 +1168,13 @@ returning: 4
     ])</code></pre>
 </details>
 </dd>
-<dt id="aioextensions.force_loop_cycle"><code class="name flex">
-<span>async def <span class="ident">force_loop_cycle</span></span>(<span>) ‑> NoneType</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Force the event loop to perform one cycle.</p>
-<p>This can be used to suspend the execution of the current coroutine and
-yield control back to the event-loop.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L336-L342" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">async def force_loop_cycle() -&gt; None:
-    &#34;&#34;&#34;Force the event loop to perform one cycle.
-
-    This can be used to suspend the execution of the current coroutine and
-    yield control back to the event-loop.
-    &#34;&#34;&#34;
-    await asyncio.sleep(0)</code></pre>
-</details>
-</dd>
 <dt id="aioextensions.resolve"><code class="name flex">
 <span>def <span class="ident">resolve</span></span>(<span>awaitables: Iterable[Awaitable[~T]], *, workers: int = 1024, worker_greediness: int = 0) ‑> Iterable[Awaitable[~T]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve concurrently the input stream and yield back in the same order.</p>
-<p>The algorithm makes sure that at any point in time every worker is busy.
-Also, at any point in time there will be at most <em>number of <code>workers</code></em>
-tasks being resolved concurrently.</p>
-<p>The <code>worker_greediness</code> parameter controlls how much each worker can
-process before waiting for you to retrieve results. This is important
-when the input stream is big as it allows you to control the memory usage.</p>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>This is similar to asyncio.as_completed. However it allows you
-to control how much resources are consumed throughout the execution,
-for instance:</p>
-<ul>
-<li>How many open files will be opened at the same time</li>
-<li>How many HTTP requests will be performed to a service (rate limit)</li>
-<li>How many sockets will be opened concurrently</li>
-<li>Etc</li>
-</ul>
-<p>This is useful for finite resources, for instance: the number
-of sockets provided by the operative system is limited; going beyond it
-would make the kernel to kill the program abruptly.</p>
-</div>
+<p>This works very similar to <code><a title="aioextensions.collect" href="#aioextensions.collect">collect()</a></code> except it's lazy and allows you
+to handle exceptions on singular elements.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
         print('running:', n)
@@ -1065,34 +1207,11 @@ running: 4
 returning: 4
 got resolved result: 4
 </code></pre>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>awaitables</code></strong></dt>
-<dd>An iterable (generator, list, tuple, set, etc) of
-awaitables (coroutine, asyncio.Task, or asyncio.Future).</dd>
-<dt><strong><code>workers</code></strong></dt>
-<dd>The number of independent workers that will be processing
-the input stream.</dd>
-<dt><strong><code>worker_greediness</code></strong></dt>
-<dd>How much tasks can a worker process before waiting
-for you to retrieve its results. 0 means unlimited.</dd>
-</dl>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>This approach may be many times faster than batching because
-workers are independent of each other and they are constantly fetching
-the next task as soon as they get free (as long as the greediness
-allows them).</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>If awaitables is an instance of Sized (has <code>__len__</code> prototype).
-This function will launch at most <code>len(awaitables)</code> workers.</p>
-</div></div>
+<p>See <code><a title="aioextensions.collect" href="#aioextensions.collect">collect()</a></code> for more information on the algorithm used and parameters.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L345-L474" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L428-L518" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[T]],
@@ -1102,27 +1221,8 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 ) -&gt; Iterable[Awaitable[T]]:
     &#34;&#34;&#34;Resolve concurrently the input stream and yield back in the same order.
 
-    The algorithm makes sure that at any point in time every worker is busy.
-    Also, at any point in time there will be at most _number of `workers`_
-    tasks being resolved concurrently.
-
-    The `worker_greediness` parameter controlls how much each worker can
-    process before waiting for you to retrieve results. This is important
-    when the input stream is big as it allows you to control the memory usage.
-
-    .. tip::
-        This is similar to asyncio.as_completed. However it allows you
-        to control how much resources are consumed throughout the execution,
-        for instance:
-
-        - How many open files will be opened at the same time
-        - How many HTTP requests will be performed to a service (rate limit)
-        - How many sockets will be opened concurrently
-        - Etc
-
-        This is useful for finite resources, for instance: the number
-        of sockets provided by the operative system is limited; going beyond it
-        would make the kernel to kill the program abruptly.
+    This works very similar to `collect` except it&#39;s lazy and allows you
+    to handle exceptions on singular elements.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -1158,27 +1258,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
         got resolved result: 4
         ```
 
-    Args:
-        awaitables: An iterable (generator, list, tuple, set, etc) of
-            awaitables (coroutine, asyncio.Task, or asyncio.Future).
-        workers: The number of independent workers that will be processing
-            the input stream.
-        worker_greediness: How much tasks can a worker process before waiting
-            for you to retrieve its results. 0 means unlimited.
-
-    Yields:
-        A future with the result of the next ready task. Futures are yielded in
-        the same order of the input stream (opposite to asyncio.as_completed)
-
-    .. tip::
-        This approach may be many times faster than batching because
-        workers are independent of each other and they are constantly fetching
-        the next task as soon as they get free (as long as the greediness
-        allows them).
-
-    .. tip::
-        If awaitables is an instance of Sized (has `__len__` prototype).
-        This function will launch at most `len(awaitables)` workers.
+    See `collect` for more information on the algorithm used and parameters.
     &#34;&#34;&#34;
     if workers &lt; 1:
         raise ValueError(&#39;workers must be &gt;= 1&#39;)
@@ -1226,6 +1306,27 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
         yield cast(Awaitable[T], get_one(index))</code></pre>
 </details>
 </dd>
+<dt id="aioextensions.force_loop_cycle"><code class="name flex">
+<span>async def <span class="ident">force_loop_cycle</span></span>(<span>) ‑> NoneType</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Force the event loop to perform one cycle.</p>
+<p>This can be used to suspend the execution of the current coroutine and
+yield control back to the event-loop until the next cycle.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L556-L562" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">async def force_loop_cycle() -&gt; None:
+    &#34;&#34;&#34;Force the event loop to perform one cycle.
+
+    This can be used to suspend the execution of the current coroutine and
+    yield control back to the event-loop until the next cycle.
+    &#34;&#34;&#34;
+    await asyncio.sleep(0)</code></pre>
+</details>
+</dd>
 <dt id="aioextensions.schedule"><code class="name flex">
 <span>def <span class="ident">schedule</span></span>(<span>awaitable: Awaitable[~T], *, loop: Union[asyncio.events.AbstractEventLoop, NoneType] = None) ‑> Awaitable[~T]</span>
 </code></dt>
@@ -1234,7 +1335,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L525-L541" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L565-L581" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[T],
@@ -1255,52 +1356,44 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
     return wrapper</code></pre>
 </details>
 </dd>
-<dt id="aioextensions.unblock"><code class="name flex">
-<span>async def <span class="ident">unblock</span></span>(<span>function: Callable[..., ~T], *args: Any, **kwargs: Any) ‑> ~T</span>
+<dt id="aioextensions.run_decorator"><code class="name flex">
+<span>def <span class="ident">run_decorator</span></span>(<span>function: ~F) ‑> ~F</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Execute function(<em>args, </em>*kwargs) in the specified thread executor.</p></div>
+<div class="desc"><p>Decorator to turn an asynchronous function into a synchronous one.</p>
+<h2 id="example">Example</h2>
+<pre><code class="python">&gt;&gt;&gt; @run_decorator
+    async def do(a, b=0):
+        return a + b
+</code></pre>
+<pre><code class="python">&gt;&gt;&gt; do(1, b=2) == 3
+</code></pre>
+<p>This can be used as a bridge between synchronous and asynchronous code.
+We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L544-L555" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L584-L602" class="git-link">Browse git</a>
 </summary>
-<pre><code class="python">async def unblock(
-    function: Callable[..., T],
-    *args: Any,
-    **kwargs: Any,
-) -&gt; T:
-    &#34;&#34;&#34;Execute function(*args, **kwargs) in the specified thread executor.&#34;&#34;&#34;
-    if not THREAD_POOL.initialized:
-        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
+<pre><code class="python">def run_decorator(function: F) -&gt; F:
+    &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
 
-    return await asyncio.get_running_loop().run_in_executor(
-        THREAD_POOL.pool, partial(function, *args, **kwargs),
-    )</code></pre>
-</details>
-</dd>
-<dt id="aioextensions.unblock_cpu"><code class="name flex">
-<span>async def <span class="ident">unblock_cpu</span></span>(<span>function: Callable[..., ~T], *args: Any, **kwargs: Any) ‑> ~T</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Execute function(<em>args, </em>*kwargs) in the specified process executor.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L558-L569" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">async def unblock_cpu(
-    function: Callable[..., T],
-    *args: Any,
-    **kwargs: Any,
-) -&gt; T:
-    &#34;&#34;&#34;Execute function(*args, **kwargs) in the specified process executor.&#34;&#34;&#34;
-    if not PROCESS_POOL.initialized:
-        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+    Example:
+        &gt;&gt;&gt; @run_decorator
+            async def do(a, b=0):
+                return a + b
 
-    return await asyncio.get_running_loop().run_in_executor(
-        PROCESS_POOL.pool, partial(function, *args, **kwargs),
-    )</code></pre>
+        &gt;&gt;&gt; do(1, b=2) == 3
+
+    This can be used as a bridge between synchronous and asynchronous code.
+    We use it mostly in tests for its convenience over pytest-asyncio plugin.
+    &#34;&#34;&#34;
+
+    @wraps(function)
+    def wrapper(*args: Any, **kwargs: Any) -&gt; Any:
+        return run(function(*args, **kwargs))
+
+    return cast(F, wrapper)</code></pre>
 </details>
 </dd>
 </dl>
@@ -1317,7 +1410,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L301-L333" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L521-L553" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
 
@@ -1355,26 +1448,13 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 </details>
 <h3>Instance variables</h3>
 <dl>
-<dt id="aioextensions.ExecutorPool.initialized"><code class="name">var <span class="ident">initialized</span> : bool</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L331-L333" class="git-link">Browse git</a>
-</summary>
-<pre><code class="python">@property
-def initialized(self) -&gt; bool:
-    return self._pool is not None</code></pre>
-</details>
-</dd>
 <dt id="aioextensions.ExecutorPool.pool"><code class="name">var <span class="ident">pool</span> : concurrent.futures._base.Executor</code></dt>
 <dd>
 <div class="desc"></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L324-L329" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L544-L549" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -1382,6 +1462,19 @@ def pool(self) -&gt; Executor:
         raise RuntimeError(&#39;Must call initialize first&#39;)
 
     return self._pool</code></pre>
+</details>
+</dd>
+<dt id="aioextensions.ExecutorPool.initialized"><code class="name">var <span class="ident">initialized</span> : bool</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L551-L553" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@property
+def initialized(self) -&gt; bool:
+    return self._pool is not None</code></pre>
 </details>
 </dd>
 </dl>
@@ -1395,7 +1488,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L313-L317" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L533-L537" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     if self._pool is not None:
@@ -1412,7 +1505,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L319-L322" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L539-L542" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     if self._pool is not None:
@@ -1447,14 +1540,14 @@ def pool(self) -&gt; Executor:
 <ul id="index">
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="two-column">
-<li><code><a title="aioextensions.block" href="#aioextensions.block">block</a></code></li>
-<li><code><a title="aioextensions.block_decorator" href="#aioextensions.block_decorator">block_decorator</a></code></li>
+<li><code><a title="aioextensions.run" href="#aioextensions.run">run</a></code></li>
+<li><code><a title="aioextensions.in_thread" href="#aioextensions.in_thread">in_thread</a></code></li>
+<li><code><a title="aioextensions.in_process" href="#aioextensions.in_process">in_process</a></code></li>
 <li><code><a title="aioextensions.collect" href="#aioextensions.collect">collect</a></code></li>
-<li><code><a title="aioextensions.force_loop_cycle" href="#aioextensions.force_loop_cycle">force_loop_cycle</a></code></li>
 <li><code><a title="aioextensions.resolve" href="#aioextensions.resolve">resolve</a></code></li>
+<li><code><a title="aioextensions.force_loop_cycle" href="#aioextensions.force_loop_cycle">force_loop_cycle</a></code></li>
 <li><code><a title="aioextensions.schedule" href="#aioextensions.schedule">schedule</a></code></li>
-<li><code><a title="aioextensions.unblock" href="#aioextensions.unblock">unblock</a></code></li>
-<li><code><a title="aioextensions.unblock_cpu" href="#aioextensions.unblock_cpu">unblock_cpu</a></code></li>
+<li><code><a title="aioextensions.run_decorator" href="#aioextensions.run_decorator">run_decorator</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -1463,9 +1556,9 @@ def pool(self) -&gt; Executor:
 <h4><code><a title="aioextensions.ExecutorPool" href="#aioextensions.ExecutorPool">ExecutorPool</a></code></h4>
 <ul class="">
 <li><code><a title="aioextensions.ExecutorPool.initialize" href="#aioextensions.ExecutorPool.initialize">initialize</a></code></li>
-<li><code><a title="aioextensions.ExecutorPool.initialized" href="#aioextensions.ExecutorPool.initialized">initialized</a></code></li>
-<li><code><a title="aioextensions.ExecutorPool.pool" href="#aioextensions.ExecutorPool.pool">pool</a></code></li>
 <li><code><a title="aioextensions.ExecutorPool.shutdown" href="#aioextensions.ExecutorPool.shutdown">shutdown</a></code></li>
+<li><code><a title="aioextensions.ExecutorPool.pool" href="#aioextensions.ExecutorPool.pool">pool</a></code></li>
+<li><code><a title="aioextensions.ExecutorPool.initialized" href="#aioextensions.ExecutorPool.initialized">initialized</a></code></li>
 </ul>
 </li>
 </ul>
