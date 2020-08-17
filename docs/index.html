@@ -137,11 +137,11 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
 <pre><code class="python">&gt;&gt;&gt; from aioextensions import collect, in_process, run
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; def cpu_bound_task(id: str):
-        print('doing:', id)
+        print(f'doing: {id}')
         # Imagine here something that uses a lot the CPU
         # For example: this complex mathematical operation
         for _ in range(10): 3**20000000
-        print('returning:', id)
+        print(f'returning: {id}')
         return id
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; async def main():
@@ -151,7 +151,7 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
             # Let's solve 5 of those tasks in parallel!
             for id in range(5)
         ])
-        print('results:', results)
+        print(f'results: {results}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; run(main())
 # I have 4 CPU cores in my machine
@@ -178,11 +178,11 @@ operations to complete.</p>
 &gt;&gt;&gt; from time import sleep, time
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; def io_bound_task(id: str):
-        print('time:', time(), 'doing:', id)
+        print(f'time: {time()}, doing: {id}')
         # Imagine here something with high latency
         # For example: a call to the database, or this sleep
         sleep(1)
-        print('time:', time(), 'returning:', id)
+        print(f'time: {time()}, returning: {id}')
         return id
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; async def main():
@@ -192,20 +192,20 @@ operations to complete.</p>
             # Let's solve 5 of those tasks concurrently!
             for id in range(5)
         ])
-        print('time:', time(), 'results:', results)
+        print(f'time: {time()}, results: {results}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; run(main)
-time: 1597623831 doing: 0
-time: 1597623831 doing: 1
-time: 1597623831 doing: 2
-time: 1597623831 doing: 3
-time: 1597623831 doing: 4
-time: 1597623832 returning: 0
-time: 1597623832 returning: 4
-time: 1597623832 returning: 3
-time: 1597623832 returning: 2
-time: 1597623832 returning: 1
-time: 1597623832 results: (0, 1, 2, 3, 4)
+time: 1597623831, doing: 0
+time: 1597623831, doing: 1
+time: 1597623831, doing: 2
+time: 1597623831, doing: 3
+time: 1597623831, doing: 4
+time: 1597623832, returning: 0
+time: 1597623832, returning: 4
+time: 1597623832, returning: 3
+time: 1597623832, returning: 2
+time: 1597623832, returning: 1
+time: 1597623832, results: (0, 1, 2, 3, 4)
 </code></pre>
 <p>As expected, all tasks were executed concurrently. This means that instead of
 waiting five seconds for five tasks (serially) we just waited one second for
@@ -220,7 +220,7 @@ all of them.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L793" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L798" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -337,11 +337,11 @@ Usage:
     &gt;&gt;&gt; from aioextensions import collect, in_process, run
 
     &gt;&gt;&gt; def cpu_bound_task(id: str):
-            print(&#39;doing:&#39;, id)
+            print(f&#39;doing: {id}&#39;)
             # Imagine here something that uses a lot the CPU
             # For example: this complex mathematical operation
             for _ in range(10): 3**20000000
-            print(&#39;returning:&#39;, id)
+            print(f&#39;returning: {id}&#39;)
             return id
 
     &gt;&gt;&gt; async def main():
@@ -351,7 +351,7 @@ Usage:
                 # Let&#39;s solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
-            print(&#39;results:&#39;, results)
+            print(f&#39;results: {results}&#39;)
 
     &gt;&gt;&gt; run(main())
     # I have 4 CPU cores in my machine
@@ -382,11 +382,11 @@ Usage:
     &gt;&gt;&gt; from time import sleep, time
 
     &gt;&gt;&gt; def io_bound_task(id: str):
-            print(&#39;time:&#39;, time(), &#39;doing:&#39;, id)
+            print(f&#39;time: {time()}, doing: {id}&#39;)
             # Imagine here something with high latency
             # For example: a call to the database, or this sleep
             sleep(1)
-            print(&#39;time:&#39;, time(), &#39;returning:&#39;, id)
+            print(f&#39;time: {time()}, returning: {id}&#39;)
             return id
 
     &gt;&gt;&gt; async def main():
@@ -396,20 +396,20 @@ Usage:
                 # Let&#39;s solve 5 of those tasks concurrently!
                 for id in range(5)
             ])
-            print(&#39;time:&#39;, time(), &#39;results:&#39;, results)
+            print(f&#39;time: {time()}, results: {results}&#39;)
 
     &gt;&gt;&gt; run(main)
-    time: 1597623831 doing: 0
-    time: 1597623831 doing: 1
-    time: 1597623831 doing: 2
-    time: 1597623831 doing: 3
-    time: 1597623831 doing: 4
-    time: 1597623832 returning: 0
-    time: 1597623832 returning: 4
-    time: 1597623832 returning: 3
-    time: 1597623832 returning: 2
-    time: 1597623832 returning: 1
-    time: 1597623832 results: (0, 1, 2, 3, 4)
+    time: 1597623831, doing: 0
+    time: 1597623831, doing: 1
+    time: 1597623831, doing: 2
+    time: 1597623831, doing: 3
+    time: 1597623831, doing: 4
+    time: 1597623832, returning: 0
+    time: 1597623832, returning: 4
+    time: 1597623832, returning: 3
+    time: 1597623832, returning: 2
+    time: 1597623832, returning: 1
+    time: 1597623832, results: (0, 1, 2, 3, 4)
 
 As expected, all tasks were executed concurrently. This means that instead of
 waiting five seconds for five tasks (serially) we just waited one second for
@@ -576,7 +576,7 @@ def rate_limited(
         &gt;&gt;&gt; @rate_limited(max_calls=2, over_seconds=1.0)
             async def query(n):
                 await something
-                print(&#39;time:&#39;, time(), &#39;doing: &#39;, n)
+                print(f&#39;time: {time()}, doing: {n}&#39;)
 
         &gt;&gt;&gt; for n in range(10):
                 await query(n)
@@ -584,16 +584,16 @@ def rate_limited(
     Output:
 
         ```
-        time: 1597701092 doing: 0
-        time: 1597701092 doing: 1
-        time: 1597701093 doing: 2
-        time: 1597701093 doing: 3
-        time: 1597701094 doing: 4
-        time: 1597701094 doing: 5
-        time: 1597701095 doing: 6
-        time: 1597701095 doing: 7
-        time: 1597701096 doing: 8
-        time: 1597701096 doing: 9
+        time: 1597701092, doing: 0
+        time: 1597701092, doing: 1
+        time: 1597701093, doing: 2
+        time: 1597701093, doing: 3
+        time: 1597701094, doing: 4
+        time: 1597701094, doing: 5
+        time: 1597701095, doing: 6
+        time: 1597701095, doing: 7
+        time: 1597701096, doing: 8
+        time: 1597701096, doing: 9
         ```
 
         Take into account that calls can still burst.
@@ -640,16 +640,16 @@ async def collect(
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; results = await collect(iterable, workers=2)
 
-        &gt;&gt;&gt; print(results)
+        &gt;&gt;&gt; print(f&#39;results: {results}&#39;)
 
     Output:
         ```
@@ -663,7 +663,7 @@ async def collect(
         returning: 3
         running: 4
         returning: 4
-        (0, 1, 2, 3, 4)
+        results: (0, 1, 2, 3, 4)
         ```
 
     .. tip::
@@ -724,16 +724,16 @@ def resolve(  # noqa: mccabe
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await asyncio.sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; for next in resolve(iterable, workers=2):
                 try:
-                    print(&#39;got resolved result:&#39;, await next)
+                    print(f&#39;got resolved result: {await next}&#39;)
                 except:
                     pass  # Handle possible exceptions
 
@@ -877,9 +877,9 @@ def schedule(
     Usage:
 
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
 
         &gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 
@@ -887,7 +887,7 @@ def schedule(
 
         &gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 
-        &gt;&gt;&gt; print(task_result.result())  # may rise if do() raised
+        &gt;&gt;&gt; print(f&#39;result: {task_result.result()}&#39;)  # may rise if do() raised
 
     Output:
 
@@ -982,8 +982,13 @@ def run_decorator(function: F) -&gt; F:
             async def do(a, b=0):
                 return a + b
 
-        &gt;&gt;&gt; do(1, b=2) == 3
+        &gt;&gt;&gt; do(1, b=2)
 
+    Output:
+
+        ```
+        3
+        ```
     This can be used as a bridge between synchronous and asynchronous code.
     We use it mostly in tests for its convenience over pytest-asyncio plugin.
     &#34;&#34;&#34;
@@ -1209,22 +1214,22 @@ mode.</p>
 <pre><code class="python">&gt;&gt;&gt; @rate_limited(max_calls=2, over_seconds=1.0)
     async def query(n):
         await something
-        print('time:', time(), 'doing: ', n)
+        print(f'time: {time()}, doing: {n}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; for n in range(10):
         await query(n)
 </code></pre>
 <h2 id="output">Output</h2>
-<pre><code>time: 1597701092 doing: 0
-time: 1597701092 doing: 1
-time: 1597701093 doing: 2
-time: 1597701093 doing: 3
-time: 1597701094 doing: 4
-time: 1597701094 doing: 5
-time: 1597701095 doing: 6
-time: 1597701095 doing: 7
-time: 1597701096 doing: 8
-time: 1597701096 doing: 9
+<pre><code>time: 1597701092, doing: 0
+time: 1597701092, doing: 1
+time: 1597701093, doing: 2
+time: 1597701093, doing: 3
+time: 1597701094, doing: 4
+time: 1597701094, doing: 5
+time: 1597701095, doing: 6
+time: 1597701095, doing: 7
+time: 1597701096, doing: 8
+time: 1597701096, doing: 9
 </code></pre>
 <p>Take into account that calls can still burst.</p></div>
 <details class="source">
@@ -1250,7 +1255,7 @@ time: 1597701096 doing: 9
         &gt;&gt;&gt; @rate_limited(max_calls=2, over_seconds=1.0)
             async def query(n):
                 await something
-                print(&#39;time:&#39;, time(), &#39;doing: &#39;, n)
+                print(f&#39;time: {time()}, doing: {n}&#39;)
 
         &gt;&gt;&gt; for n in range(10):
                 await query(n)
@@ -1258,16 +1263,16 @@ time: 1597701096 doing: 9
     Output:
 
         ```
-        time: 1597701092 doing: 0
-        time: 1597701092 doing: 1
-        time: 1597701093 doing: 2
-        time: 1597701093 doing: 3
-        time: 1597701094 doing: 4
-        time: 1597701094 doing: 5
-        time: 1597701095 doing: 6
-        time: 1597701095 doing: 7
-        time: 1597701096 doing: 8
-        time: 1597701096 doing: 9
+        time: 1597701092, doing: 0
+        time: 1597701092, doing: 1
+        time: 1597701093, doing: 2
+        time: 1597701093, doing: 3
+        time: 1597701094, doing: 4
+        time: 1597701094, doing: 5
+        time: 1597701095, doing: 6
+        time: 1597701095, doing: 7
+        time: 1597701096, doing: 8
+        time: 1597701096, doing: 9
         ```
 
         Take into account that calls can still burst.
@@ -1309,16 +1314,16 @@ process before waiting for you to retrieve results. This is important when
 the input stream is big as it allows you to control memory usage.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
-        print('running:', n)
+        print(f'running: {n}')
         await sleep(1)
-        print('returning:', n)
+        print(f'returning: {n}')
         return n
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; iterable = map(do, range(5))
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; results = await collect(iterable, workers=2)
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; print(results)
+<pre><code class="python">&gt;&gt;&gt; print(f'results: {results}')
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>running: 0
@@ -1331,7 +1336,7 @@ returning: 2
 returning: 3
 running: 4
 returning: 4
-(0, 1, 2, 3, 4)
+results: (0, 1, 2, 3, 4)
 </code></pre>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -1394,16 +1399,16 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; results = await collect(iterable, workers=2)
 
-        &gt;&gt;&gt; print(results)
+        &gt;&gt;&gt; print(f&#39;results: {results}&#39;)
 
     Output:
         ```
@@ -1417,7 +1422,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
         returning: 3
         running: 4
         returning: 4
-        (0, 1, 2, 3, 4)
+        results: (0, 1, 2, 3, 4)
         ```
 
     .. tip::
@@ -1474,16 +1479,16 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 to handle exceptions on singular elements.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
-        print('running:', n)
+        print(f'running: {n}')
         await asyncio.sleep(1)
-        print('returning:', n)
+        print(f'returning: {n}')
         return n
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; iterable = map(do, range(5))
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; for next in resolve(iterable, workers=2):
         try:
-            print('got resolved result:', await next)
+            print(f'got resolved result: {await next}')
         except:
             pass  # Handle possible exceptions
 </code></pre>
@@ -1523,16 +1528,16 @@ got resolved result: 4
 
     Usage:
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await asyncio.sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
                 return n
 
         &gt;&gt;&gt; iterable = map(do, range(5))
 
         &gt;&gt;&gt; for next in resolve(iterable, workers=2):
                 try:
-                    print(&#39;got resolved result:&#39;, await next)
+                    print(f&#39;got resolved result: {await next}&#39;)
                 except:
                     pass  # Handle possible exceptions
 
@@ -1718,9 +1723,9 @@ For instance, in a web server.</p></div>
 <div class="desc"><p>Schedule an awaitable in the event loop and return a wrapper for it.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
-        print('running:', n)
+        print(f'running: {n}')
         await sleep(1)
-        print('returning:', n)
+        print(f'returning: {n}')
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 </code></pre>
@@ -1728,7 +1733,7 @@ For instance, in a web server.</p></div>
 </code></pre>
 <pre><code class="python">&gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; print(task_result.result())  # may rise if do() raised
+<pre><code class="python">&gt;&gt;&gt; print(f'result: {task_result.result()}')  # may rise if do() raised
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>other work is being done here
@@ -1756,9 +1761,9 @@ the moment result() is called and never otherwise.</p></div>
     Usage:
 
         &gt;&gt;&gt; async def do(n):
-                print(&#39;running:&#39;, n)
+                print(f&#39;running: {n}&#39;)
                 await sleep(1)
-                print(&#39;returning:&#39;, n)
+                print(f&#39;returning: {n}&#39;)
 
         &gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 
@@ -1766,7 +1771,7 @@ the moment result() is called and never otherwise.</p></div>
 
         &gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 
-        &gt;&gt;&gt; print(task_result.result())  # may rise if do() raised
+        &gt;&gt;&gt; print(f&#39;result: {task_result.result()}&#39;)  # may rise if do() raised
 
     Output:
 
@@ -1805,14 +1810,17 @@ the moment result() is called and never otherwise.</p></div>
     async def do(a, b=0):
         return a + b
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; do(1, b=2) == 3
+<pre><code class="python">&gt;&gt;&gt; do(1, b=2)
+</code></pre>
+<h2 id="output">Output</h2>
+<pre><code>3
 </code></pre>
 <p>This can be used as a bridge between synchronous and asynchronous code.
 We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L753-L771" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L753-L776" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
@@ -1822,8 +1830,13 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
             async def do(a, b=0):
                 return a + b
 
-        &gt;&gt;&gt; do(1, b=2) == 3
+        &gt;&gt;&gt; do(1, b=2)
 
+    Output:
+
+        ```
+        3
+        ```
     This can be used as a bridge between synchronous and asynchronous code.
     We use it mostly in tests for its convenience over pytest-asyncio plugin.
     &#34;&#34;&#34;
