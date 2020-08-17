@@ -204,6 +204,9 @@ Please read the documentation bellow for more details about every function.
 
 # Standard library
 import asyncio
+from collections import (
+    deque,
+)
 from concurrent.futures import (
     Executor,
     ProcessPoolExecutor,
@@ -226,6 +229,7 @@ from typing import (
     Awaitable,
     Callable,
     cast,
+    Deque,
     Dict,
     Generator,
     Iterable,
@@ -277,7 +281,7 @@ async def in_thread(
     *args: Any,
     **kwargs: Any,
 ) -> T:
-    """Execute function(*args, **kwargs) in the configured thread pool.
+    """Execute `function(*args, **kwargs)` in the configured thread pool.
 
     This is the most performant wrapper for IO bound and high-latency tasks.
 
@@ -305,7 +309,7 @@ async def in_process(
     *args: Any,
     **kwargs: Any,
 ) -> T:
-    """Execute function(*args, **kwargs) in the configured process pool.
+    """Execute `function(*args, **kwargs)` in the configured process pool.
 
     This is the most performant wrapper for CPU bound and low-latency tasks.
 
@@ -330,6 +334,70 @@ async def in_process(
     )
 
 
+def rate_limited(
+    *,
+    max_calls: int,
+    over_seconds: Union[float, int],
+) -> Callable[[F], F]:
+    """Decorator to turn an asynchronous function into a rate limited one.
+
+    The decorated function won't be able to execute more than `max_calls` times
+    over a period of `over_seconds` seconds. The excess will be queued in FIFO
+    mode.
+
+    Example:
+
+        If you want to perform at most 2 calls to a database per second:
+
+        >>> @rate_limited(max_calls=2, over_seconds=1.0)
+            async def query(n):
+                await something
+                print('time:', time(), 'doing: ', n)
+
+        >>> for n in range(10):
+                await query(n)
+
+    Output:
+
+        ```
+        time: 1597701092 doing: 0
+        time: 1597701092 doing: 1
+        time: 1597701093 doing: 2
+        time: 1597701093 doing: 3
+        time: 1597701094 doing: 4
+        time: 1597701094 doing: 5
+        time: 1597701095 doing: 6
+        time: 1597701095 doing: 7
+        time: 1597701096 doing: 8
+        time: 1597701096 doing: 9
+        ```
+
+        Take into account that calls can still burst.
+    """
+
+    def decorator(function: F) -> F:
+        lock = None
+        waits: Deque[float] = deque()
+
+        @wraps(function)
+        async def wrapper(*args: Any, **kwargs: Any) -> Any:
+            nonlocal lock
+
+            lock = lock or asyncio.Lock()
+            loop = asyncio.get_event_loop()
+
+            async with lock:
+                while len(waits) >= max_calls:
+                    await asyncio.sleep(waits.popleft() - loop.time())
+                waits.append(loop.time() + over_seconds)
+
+            return await function(*args, **kwargs)
+
+        return cast(F, wrapper)
+
+    return decorator
+
+
 async def collect(
     awaitables: Iterable[Awaitable[T]],
     *,
@@ -345,20 +413,6 @@ async def collect(
     The `worker_greediness` parameter controlls how much each worker can
     process before waiting for you to retrieve results. This is important when
     the input stream is big as it allows you to control memory usage.
-
-    .. tip::
-        This is similar to asyncio.as_completed. However this returns results
-        in order and allows you to control how much resources are consumed
-        throughout the execution, for instance:
-
-        - How many open files will be opened at the same time
-        - How many HTTP requests will be performed to a service (rate limit)
-        - How many sockets will be opened concurrently
-        - Etc
-
-        This is useful for finite resources, for instance: the number
-        of sockets provided by the operative system is limited; going beyond it
-        would make the kernel to kill the program abruptly.
 
     Usage:
         >>> async def do(n):
@@ -387,6 +441,20 @@ async def collect(
         returning: 4
         (0, 1, 2, 3, 4)
         ```
+
+    .. tip::
+        This is similar to asyncio.as_completed. However this returns results
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
 
     Args:
         awaitables: An iterable (generator, list, tuple, set, etc) of
@@ -598,15 +666,20 @@ def schedule(
         >>> print(task_result.result())  # may rise if do() raised
 
     Output:
+
         ```
         other work is being done here
         doing: 3
         returning: 3
         3
         ```
-    This works very similar to asyncio.create_task. The main difference is
-    that the result (or exception) can be accessed via exception() or
-    result() methods.
+
+    This works very similar to asyncio.create_task. The main difference is that
+    the result (or exception) can be accessed via exception() or result()
+    methods.
+
+    If an exception was raised by the awaitable, it will be propagated only at
+    the moment result() is called and never otherwise.
     """
     wrapper = (loop or asyncio.get_event_loop()).create_future()
 
