@@ -113,11 +113,11 @@ Usage:
     >>> from aioextensions import collect, in_process, run
 
     >>> def cpu_bound_task(id: str):
-            print('doing:', id)
+            print(f'doing: {id}')
             # Imagine here something that uses a lot the CPU
             # For example: this complex mathematical operation
             for _ in range(10): 3**20000000
-            print('returning:', id)
+            print(f'returning: {id}')
             return id
 
     >>> async def main():
@@ -127,7 +127,7 @@ Usage:
                 # Let's solve 5 of those tasks in parallel!
                 for id in range(5)
             ])
-            print('results:', results)
+            print(f'results: {results}')
 
     >>> run(main())
     # I have 4 CPU cores in my machine
@@ -158,11 +158,11 @@ Usage:
     >>> from time import sleep, time
 
     >>> def io_bound_task(id: str):
-            print('time:', time(), 'doing:', id)
+            print(f'time: {time()}, doing: {id}')
             # Imagine here something with high latency
             # For example: a call to the database, or this sleep
             sleep(1)
-            print('time:', time(), 'returning:', id)
+            print(f'time: {time()}, returning: {id}')
             return id
 
     >>> async def main():
@@ -172,20 +172,20 @@ Usage:
                 # Let's solve 5 of those tasks concurrently!
                 for id in range(5)
             ])
-            print('time:', time(), 'results:', results)
+            print(f'time: {time()}, results: {results}')
 
     >>> run(main)
-    time: 1597623831 doing: 0
-    time: 1597623831 doing: 1
-    time: 1597623831 doing: 2
-    time: 1597623831 doing: 3
-    time: 1597623831 doing: 4
-    time: 1597623832 returning: 0
-    time: 1597623832 returning: 4
-    time: 1597623832 returning: 3
-    time: 1597623832 returning: 2
-    time: 1597623832 returning: 1
-    time: 1597623832 results: (0, 1, 2, 3, 4)
+    time: 1597623831, doing: 0
+    time: 1597623831, doing: 1
+    time: 1597623831, doing: 2
+    time: 1597623831, doing: 3
+    time: 1597623831, doing: 4
+    time: 1597623832, returning: 0
+    time: 1597623832, returning: 4
+    time: 1597623832, returning: 3
+    time: 1597623832, returning: 2
+    time: 1597623832, returning: 1
+    time: 1597623832, results: (0, 1, 2, 3, 4)
 
 As expected, all tasks were executed concurrently. This means that instead of
 waiting five seconds for five tasks (serially) we just waited one second for
@@ -352,7 +352,7 @@ def rate_limited(
         >>> @rate_limited(max_calls=2, over_seconds=1.0)
             async def query(n):
                 await something
-                print('time:', time(), 'doing: ', n)
+                print(f'time: {time()}, doing: {n}')
 
         >>> for n in range(10):
                 await query(n)
@@ -360,16 +360,16 @@ def rate_limited(
     Output:
 
         ```
-        time: 1597701092 doing: 0
-        time: 1597701092 doing: 1
-        time: 1597701093 doing: 2
-        time: 1597701093 doing: 3
-        time: 1597701094 doing: 4
-        time: 1597701094 doing: 5
-        time: 1597701095 doing: 6
-        time: 1597701095 doing: 7
-        time: 1597701096 doing: 8
-        time: 1597701096 doing: 9
+        time: 1597701092, doing: 0
+        time: 1597701092, doing: 1
+        time: 1597701093, doing: 2
+        time: 1597701093, doing: 3
+        time: 1597701094, doing: 4
+        time: 1597701094, doing: 5
+        time: 1597701095, doing: 6
+        time: 1597701095, doing: 7
+        time: 1597701096, doing: 8
+        time: 1597701096, doing: 9
         ```
 
         Take into account that calls can still burst.
@@ -416,16 +416,16 @@ async def collect(
 
     Usage:
         >>> async def do(n):
-                print('running:', n)
+                print(f'running: {n}')
                 await sleep(1)
-                print('returning:', n)
+                print(f'returning: {n}')
                 return n
 
         >>> iterable = map(do, range(5))
 
         >>> results = await collect(iterable, workers=2)
 
-        >>> print(results)
+        >>> print(f'results: {results}')
 
     Output:
         ```
@@ -439,7 +439,7 @@ async def collect(
         returning: 3
         running: 4
         returning: 4
-        (0, 1, 2, 3, 4)
+        results: (0, 1, 2, 3, 4)
         ```
 
     .. tip::
@@ -500,9 +500,9 @@ def resolve(  # noqa: mccabe
 
     Usage:
         >>> async def do(n):
-                print('running:', n)
+                print(f'running: {n}')
                 await asyncio.sleep(1)
-                print('returning:', n)
+                print(f'returning: {n}')
                 return n
 
         >>> iterable = map(do, range(5))
@@ -653,9 +653,9 @@ def schedule(
     Usage:
 
         >>> async def do(n):
-                print('running:', n)
+                print(f'running: {n}')
                 await sleep(1)
-                print('returning:', n)
+                print(f'returning: {n}')
 
         >>> task = schedule(do(3))  # Task is executing in the background now
 
