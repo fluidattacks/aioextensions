@@ -408,8 +408,7 @@ async def collect(
     .. tip::
         This approach may be many times faster than batching because
         workers are independent of each other and they are constantly fetching
-        the next task as soon as they get free (as long as the greediness
-        allows them).
+        the next task as soon as they are free (if greediness allows them).
 
     .. tip::
         If awaitables is an instance of Sized (has `__len__` prototype).
@@ -518,6 +517,68 @@ def resolve(  # noqa: mccabe
         yield cast(Awaitable[T], get_one(index))
 
 
+async def force_loop_cycle() -> None:
+    """Force the event loop to perform one cycle.
+
+    This can be used to suspend the execution of the current coroutine and
+    yield control back to the event-loop until the next cycle.
+
+    Can be seen as a forceful switch of control between threads.
+    Useful for cooperative initialization.
+
+    Usage:
+
+        >>> await forceforce_loop_cycle()
+
+    """
+    await asyncio.sleep(0)
+
+
+def schedule(
+    awaitable: Awaitable[T],
+    *,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+) -> 'Awaitable[asyncio.Future[T]]':
+    """Schedule an awaitable in the event loop and return a wrapper for it.
+
+    Usage:
+
+        >>> async def do(n):
+                await sleep(1)
+                return n
+
+        >>> task = schedule(do(3))
+
+        ... # Task is executing in the background now
+
+        >>> print('other work is being done here')
+
+        >>> task_result = await task  # Wait until the task is ready
+
+        >>> print(task_result.result())  # may rise if do() raised
+
+    Output:
+        ```
+        other work is being done here
+        doing: 3
+        returning: 3
+        3
+        ```
+    This works very similar to asyncio.create_task. The main difference is
+    that the result (or exception) can be accessed via exception() or
+    result() methods.
+    """
+    wrapper = (loop or asyncio.get_event_loop()).create_future()
+
+    def _done_callback(future: asyncio.Future) -> None:
+        if not wrapper.done():
+            wrapper.set_result(future)
+
+    asyncio.create_task(awaitable).add_done_callback(_done_callback)
+
+    return wrapper
+
+
 class ExecutorPool:
 
     def __init__(
@@ -551,34 +612,6 @@ class ExecutorPool:
     @property
     def initialized(self) -> bool:
         return self._pool is not None
-
-
-async def force_loop_cycle() -> None:
-    """Force the event loop to perform one cycle.
-
-    This can be used to suspend the execution of the current coroutine and
-    yield control back to the event-loop until the next cycle.
-    """
-    await asyncio.sleep(0)
-
-
-def schedule(
-    awaitable: Awaitable[T],
-    *,
-    loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> Awaitable[T]:
-    """Schedule an awaitable in the event loop and return a wrapper for it.
-
-    """
-    wrapper = (loop or asyncio.get_event_loop()).create_future()
-
-    def _done_callback(future: asyncio.Future) -> None:
-        if not wrapper.done():
-            wrapper.set_result(future)
-
-    asyncio.create_task(awaitable).add_done_callback(_done_callback)
-
-    return wrapper
 
 
 def run_decorator(function: F) -> F:
