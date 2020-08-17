@@ -110,7 +110,7 @@ processses in order to bypass the [GIL](https://realpython.com/python-gil).
 
 Usage:
 
-    >>> from aioextensions import block, collect, unblock_cpu
+    >>> from aioextensions import run, collect, unblock_cpu
 
     >>> def cpu_bound_task(id: str):
             print('doing:', id)
@@ -129,7 +129,7 @@ Usage:
             ])
             print('results:', results)
 
-    >>> block(main)
+    >>> run(main())
     # I have 4 CPU cores in my machine
     doing: 0
     doing: 1
@@ -154,7 +154,7 @@ operations to complete.
 
 Usage:
 
-    >>> from aioextensions import block, collect, unblock
+    >>> from aioextensions import run, collect, unblock
     >>> from time import sleep, time
 
     >>> def io_bound_task(id: str):
@@ -174,7 +174,7 @@ Usage:
             ])
             print('time:', time(), 'results:', results)
 
-    >>> block(main)
+    >>> run(main)
     time: 1597623831 doing: 0
     time: 1597623831 doing: 1
     time: 1597623831 doing: 2
@@ -252,11 +252,7 @@ T = TypeVar('T')  # pylint: disable=invalid-name
 # pylint: disable=unsubscriptable-object
 
 
-def block(
-    function: Callable[..., Awaitable[T]],
-    *args: Any,
-    **kwargs: Any,
-) -> T:
+def run(coroutine: Awaitable[T], *, debug: bool = False) -> T:
     """Execute an asynchronous function synchronously and return its result.
 
     Example:
@@ -264,7 +260,7 @@ def block(
                 await something
                 return a + b
 
-        >>> block(do, 1, b=2)
+        >>> run(do(1, b=2))
 
         >>> 3
 
@@ -275,7 +271,7 @@ def block(
         Use this as the entrypoint for your program.
     """
     uvloop.install()
-    return asyncio.run(function(*args, **kwargs))
+    return asyncio.run(coroutine, debug=debug)
 
 
 def block_decorator(function: F) -> F:
@@ -293,7 +289,7 @@ def block_decorator(function: F) -> F:
 
     @wraps(function)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
-        return block(function, *args, **kwargs)
+        return run(function(*args, **kwargs))
 
     return cast(F, wrapper)
 
