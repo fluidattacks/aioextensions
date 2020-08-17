@@ -362,8 +362,7 @@ def rate_limited(
                 await something
                 print(f'time: {time()}, doing: {n}')
 
-        >>> for n in range(10):
-                await query(n)
+        >>> await collect(map(query, range(10)))
 
     Output:
 
@@ -384,6 +383,8 @@ def rate_limited(
         Use `min_seconds_between_calls` as an anti-burst system. This can, for
         instance, lower your bill in DynamoDB or prevent a cooldown period
         (also know as ban) by a firewall.
+
+    This decorator creates a `max_calls` sized data structure.
     """
     if max_calls < 1:
         raise ValueError('max_calls must be >= 1')

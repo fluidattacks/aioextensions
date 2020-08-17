@@ -220,7 +220,7 @@ all of them.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L829" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L830" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -586,8 +586,7 @@ def rate_limited(
                 await something
                 print(f&#39;time: {time()}, doing: {n}&#39;)
 
-        &gt;&gt;&gt; for n in range(10):
-                await query(n)
+        &gt;&gt;&gt; await collect(map(query, range(10)))
 
     Output:
 
@@ -608,6 +607,8 @@ def rate_limited(
         Use `min_seconds_between_calls` as an anti-burst system. This can, for
         instance, lower your bill in DynamoDB or prevent a cooldown period
         (also know as ban) by a firewall.
+
+    This decorator creates a `max_calls` sized data structure.
     &#34;&#34;&#34;
     if max_calls &lt; 1:
         raise ValueError(&#39;max_calls must be &gt;= 1&#39;)
@@ -1253,8 +1254,7 @@ faster than <code>min_seconds_between_calls</code> seconds.</p>
         await something
         print(f'time: {time()}, doing: {n}')
 </code></pre>
-<pre><code class="python">&gt;&gt;&gt; for n in range(10):
-        await query(n)
+<pre><code class="python">&gt;&gt;&gt; await collect(map(query, range(10)))
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>time: 1597706698.0, doing: 0
@@ -1273,11 +1273,12 @@ time: 1597706702.2, doing: 9
 <p>Use <code>min_seconds_between_calls</code> as an anti-burst system. This can, for
 instance, lower your bill in DynamoDB or prevent a cooldown period
 (also know as ban) by a firewall.</p>
-</div></div>
+</div>
+<p>This decorator creates a <code>max_calls</code> sized data structure.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L337-L429" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L337-L430" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def rate_limited(
     *,
@@ -1307,8 +1308,7 @@ instance, lower your bill in DynamoDB or prevent a cooldown period
                 await something
                 print(f&#39;time: {time()}, doing: {n}&#39;)
 
-        &gt;&gt;&gt; for n in range(10):
-                await query(n)
+        &gt;&gt;&gt; await collect(map(query, range(10)))
 
     Output:
 
@@ -1329,6 +1329,8 @@ instance, lower your bill in DynamoDB or prevent a cooldown period
         Use `min_seconds_between_calls` as an anti-burst system. This can, for
         instance, lower your bill in DynamoDB or prevent a cooldown period
         (also know as ban) by a firewall.
+
+    This decorator creates a `max_calls` sized data structure.
     &#34;&#34;&#34;
     if max_calls &lt; 1:
         raise ValueError(&#39;max_calls must be &gt;= 1&#39;)
@@ -1452,7 +1454,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L432-L518" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L433-L519" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[T]],
@@ -1586,7 +1588,7 @@ got resolved result: 4
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L521-L611" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L522-L612" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[T]],
@@ -1696,7 +1698,7 @@ Useful for cooperative initialization.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L614-L628" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L615-L629" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform one cycle.
@@ -1741,7 +1743,7 @@ For instance, in a web server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L631-L674" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L632-L675" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def generate_in_thread(
     generator_func: Callable[..., Generator[Y, S, None]],
@@ -1822,7 +1824,7 @@ the moment result() is called and never otherwise.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L677-L723" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L678-L724" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[T],
@@ -1893,7 +1895,7 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L784-L807" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L785-L808" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
@@ -1937,7 +1939,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L736-L781" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L737-L782" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
     &#34;&#34;&#34;Object representing a pool of Processes or Threads.
@@ -1994,7 +1996,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L770-L776" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L771-L777" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -2011,7 +2013,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L778-L781" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L779-L782" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -2032,7 +2034,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L752-L761" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L753-L762" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;Initialize the executor with a cap of at most `max_workers`.
@@ -2054,7 +2056,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L763-L768" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L764-L769" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
