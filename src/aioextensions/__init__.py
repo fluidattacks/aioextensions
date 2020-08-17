@@ -598,15 +598,20 @@ def schedule(
         >>> print(task_result.result())  # may rise if do() raised
 
     Output:
+
         ```
         other work is being done here
         doing: 3
         returning: 3
         3
         ```
-    This works very similar to asyncio.create_task. The main difference is
-    that the result (or exception) can be accessed via exception() or
-    result() methods.
+
+    This works very similar to asyncio.create_task. The main difference is that
+    the result (or exception) can be accessed via exception() or result()
+    methods.
+
+    If an exception was raised by the awaitable, it will be propagated only at
+    the moment result() is called and never otherwise.
     """
     wrapper = (loop or asyncio.get_event_loop()).create_future()
 
