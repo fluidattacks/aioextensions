@@ -85,20 +85,20 @@ alone unable to exploit all hardware installed in the host.
 
 However:
 
-- CPU intensive work can be sent to a pool of Processes, far from the
+- CPU intensive work can be sent to a pool of processes, far from the
     event-loop and thus being able to bypass the
     [GIL](https://realpython.com/python-gil), exploiting many CPU cores in
     the machine, and leaving the event-loop schedule and coordinate incoming
     requests.
-- IO intensive work can be sent to a pool of Threads, far from the event-loop
+- IO intensive work can be sent to a pool of threads, far from the event-loop
     and thus being able to wait for high-latency operations without
     interrupting the event-loop work.
 
 There is an important difference:
 
--  Work done by a pool of Processes is executed in parallel: all CPU cores are
+-  Work done by a pool of processes is executed in parallel: all CPU cores are
     being used.
--  Work done by a pool of Threads is done concurrently: tasks execution is
+-  Work done by a pool of threads is done concurrently: tasks execution is
     overlapping, but not necessarily parallel: only 1 task can use the CPU
     while the remaining ones are waiting the
     [GIL](https://realpython.com/python-gil).
