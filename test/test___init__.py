@@ -11,6 +11,9 @@ from typing import (
     List,
 )
 
+# Third party libraries
+import pytest
+
 # Local libraries
 from aioextensions import (
     collect,
@@ -18,6 +21,7 @@ from aioextensions import (
     in_process,
     generate_in_thread,
     PROCESS_POOL,
+    rate_limited,
     resolve,
     run_decorator,
     THREAD_POOL,
@@ -66,6 +70,44 @@ async def test_in() -> None:
     await in_process(sync)
     await in_process(sync)
     [_ async for _ in generate_in_thread(scandir)]  # type: ignore
+
+
+@run_decorator
+async def test_rate_limited() -> None:
+
+    async def get_loop_time() -> float:
+        return asyncio.get_event_loop().time()
+
+    # Test wrong values
+    for max_calls, max_calls_period, min_seconds_between_calls in [
+        (0, 1, 0.2),
+        (2, 0, 0.2),
+        (2, 1, -0.2),
+    ]:
+        with pytest.raises(ValueError):
+            rate_limited(
+                max_calls=max_calls,
+                max_calls_period=max_calls_period,
+                min_seconds_between_calls=min_seconds_between_calls,
+            )(get_loop_time)
+
+    # Test times
+    do = rate_limited(
+        max_calls=2,
+        max_calls_period=1,
+        min_seconds_between_calls=0.2,
+    )(get_loop_time)
+    result = await collect([do() for _ in range(10)])
+
+    assert [round(x - result[0], 1) for x in result] == [
+        # at most 2 calls per second
+        # separated minimum 0.2 seconds between each one
+        0.0, 0.2,
+        1.0, 1.2,
+        2.0, 2.2,
+        3.0, 3.2,
+        4.0, 4.2,
+    ]
 
 
 @run_decorator

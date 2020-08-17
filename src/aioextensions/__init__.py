@@ -715,7 +715,7 @@ def schedule(
     wrapper = (loop or asyncio.get_event_loop()).create_future()
 
     def _done_callback(future: asyncio.Future) -> None:
-        if not wrapper.done():
+        if not wrapper.done():  # pragma: no cover
             wrapper.set_result(future)
 
     asyncio.create_task(awaitable).add_done_callback(_done_callback)
