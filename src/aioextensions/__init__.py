@@ -245,7 +245,6 @@ from typing import (
 import uvloop
 
 # Constants
-CPU_COUNT: int = cpu_count() or 1
 F = TypeVar('F', bound=Callable[..., Any])  # pylint: disable=invalid-name
 T = TypeVar('T')  # pylint: disable=invalid-name
 
@@ -291,13 +290,13 @@ async def in_thread(
     memory footprint.
 
     .. warning::
-        Executing CPU intensive work here is a bad idea because of the limitations
-        that the [GIL](https://realpython.com/python-gil) imposes.
+        Executing CPU intensive work here is a bad idea because of the
+        limitations that the [GIL](https://realpython.com/python-gil) imposes.
 
         See `in_process` for a CPU performant alternative.
     """
     if not THREAD_POOL.initialized:
-        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
+        THREAD_POOL.initialize(max_workers=10 * CPU_CORES)
 
     return await asyncio.get_running_loop().run_in_executor(
         THREAD_POOL.pool, partial(function, *args, **kwargs),
@@ -328,7 +327,7 @@ async def in_process(
         See `in_thread` for an IO performant alternative.
     """
     if not PROCESS_POOL.initialized:
-        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+        PROCESS_POOL.initialize(max_workers=CPU_CORES)
 
     return await asyncio.get_running_loop().run_in_executor(
         PROCESS_POOL.pool, partial(function, *args, **kwargs),
@@ -368,7 +367,7 @@ async def collect(
     Usage:
         >>> async def do(n):
                 print('running:', n)
-                await asyncio.sleep(1)
+                await sleep(1)
                 print('returning:', n)
                 return n
 
@@ -408,8 +407,7 @@ async def collect(
     .. tip::
         This approach may be many times faster than batching because
         workers are independent of each other and they are constantly fetching
-        the next task as soon as they get free (as long as the greediness
-        allows them).
+        the next task as soon as they are free (if greediness allows them).
 
     .. tip::
         If awaitables is an instance of Sized (has `__len__` prototype).
@@ -518,8 +516,73 @@ def resolve(  # noqa: mccabe
         yield cast(Awaitable[T], get_one(index))
 
 
-class ExecutorPool:
+async def force_loop_cycle() -> None:
+    """Force the event loop to perform one cycle.
 
+    This can be used to suspend the execution of the current coroutine and
+    yield control back to the event-loop until the next cycle.
+
+    Can be seen as a forceful switch of control between threads.
+    Useful for cooperative initialization.
+
+    Usage:
+
+        >>> await forceforce_loop_cycle()
+
+    """
+    await asyncio.sleep(0)
+
+
+def schedule(
+    awaitable: Awaitable[T],
+    *,
+    loop: Optional[asyncio.AbstractEventLoop] = None,
+) -> 'Awaitable[asyncio.Future[T]]':
+    """Schedule an awaitable in the event loop and return a wrapper for it.
+
+    Usage:
+
+        >>> async def do(n):
+                print('running:', n)
+                await sleep(1)
+                print('returning:', n)
+
+        >>> task = schedule(do(3))  # Task is executing in the background now
+
+        >>> print('other work is being done here')
+
+        >>> task_result = await task  # Wait until the task is ready
+
+        >>> print(task_result.result())  # may rise if do() raised
+
+    Output:
+        ```
+        other work is being done here
+        doing: 3
+        returning: 3
+        3
+        ```
+    This works very similar to asyncio.create_task. The main difference is
+    that the result (or exception) can be accessed via exception() or
+    result() methods.
+    """
+    wrapper = (loop or asyncio.get_event_loop()).create_future()
+
+    def _done_callback(future: asyncio.Future) -> None:
+        if not wrapper.done():
+            wrapper.set_result(future)
+
+    asyncio.create_task(awaitable).add_done_callback(_done_callback)
+
+    return wrapper
+
+
+class ExecutorPool:
+    """Object representing a pool of Processes or Threads.
+
+    The actual pool is created at `initialization` time
+    and it is empty until that.
+    """
     def __init__(
         self,
         cls: Union[
@@ -531,18 +594,26 @@ class ExecutorPool:
         self._pool: Optional[Executor] = None
 
     def initialize(self, *, max_workers: Optional[int] = None) -> None:
+        """Initialize the executor with a cap of at most `max_workers`.
+
+        Workers are created on-demand as needed or never created at all
+        if never needed.
+        """
         if self._pool is not None:
             self._pool.shutdown(wait=False)
 
         self._pool = self._cls(max_workers=max_workers)
 
     def shutdown(self, *, wait: bool) -> None:
+        """Shut down the executor and (optionally) waits for workers to finish.
+        """
         if self._pool is not None:
             self._pool.shutdown(wait=wait)
             self._pool = None
 
     @property
     def pool(self) -> Executor:
+        """Low level pool of workers held by the executor, may be None."""
         if self._pool is None:
             raise RuntimeError('Must call initialize first')
 
@@ -550,35 +621,8 @@ class ExecutorPool:
 
     @property
     def initialized(self) -> bool:
+        """Return true if the executor is initialized and ready to process."""
         return self._pool is not None
-
-
-async def force_loop_cycle() -> None:
-    """Force the event loop to perform one cycle.
-
-    This can be used to suspend the execution of the current coroutine and
-    yield control back to the event-loop until the next cycle.
-    """
-    await asyncio.sleep(0)
-
-
-def schedule(
-    awaitable: Awaitable[T],
-    *,
-    loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> Awaitable[T]:
-    """Schedule an awaitable in the event loop and return a wrapper for it.
-
-    """
-    wrapper = (loop or asyncio.get_event_loop()).create_future()
-
-    def _done_callback(future: asyncio.Future) -> None:
-        if not wrapper.done():
-            wrapper.set_result(future)
-
-    asyncio.create_task(awaitable).add_done_callback(_done_callback)
-
-    return wrapper
 
 
 def run_decorator(function: F) -> F:
@@ -603,5 +647,23 @@ def run_decorator(function: F) -> F:
 
 
 # Constants
+CPU_CORES: int = cpu_count() or 1
+"""Number of CPU cores in the host system."""
+
 PROCESS_POOL: ExecutorPool = ExecutorPool(ProcessPoolExecutor)
+"""Process pool used by `in_process` function to execute work.
+
+Preconfigured to launch at most `CPU_CORES` processes (if needed).
+
+Proceses are created on the first `in_process` call, one by one as needed
+or never launched otherwise.
+"""
+
 THREAD_POOL: ExecutorPool = ExecutorPool(ThreadPoolExecutor)
+"""Thread pool used by `in_thread` function to execute work.
+
+Preconfigured to launch at most 10 * `CPU_CORES` threads (if needed).
+
+Threads are created on the first `in_thread` call, one by one as needed,
+or never launched otherwise.
+"""
