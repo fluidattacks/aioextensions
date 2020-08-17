@@ -362,8 +362,7 @@ def rate_limited(
                 await something
                 print(f'time: {time()}, doing: {n}')
 
-        >>> for n in range(10):
-                await query(n)
+        >>> await collect(map(query, range(10)))
 
     Output:
 
