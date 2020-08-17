@@ -209,6 +209,7 @@ from concurrent.futures import (
     ProcessPoolExecutor,
     ThreadPoolExecutor,
 )
+from contextlib import suppress
 from functools import (
     partial,
     wraps,
@@ -221,10 +222,12 @@ from os import (
 )
 from typing import (
     Any,
+    AsyncGenerator,
     Awaitable,
     Callable,
     cast,
     Dict,
+    Generator,
     Iterable,
     Optional,
     Tuple,
@@ -238,7 +241,9 @@ import uvloop
 
 # Constants
 F = TypeVar('F', bound=Callable[..., Any])  # pylint: disable=invalid-name
+S = TypeVar('S')  # pylint: disable=invalid-name
 T = TypeVar('T')  # pylint: disable=invalid-name
+Y = TypeVar('Y')  # pylint: disable=invalid-name
 
 # Linters
 # pylint: disable=unsubscriptable-object
@@ -248,6 +253,7 @@ def run(coroutine: Awaitable[T], *, debug: bool = False) -> T:
     """Execute an asynchronous function synchronously and return its result.
 
     Example:
+
         >>> async def do(a, b=0):
                 await something
                 return a + b
@@ -287,8 +293,7 @@ async def in_thread(
 
         See `in_process` for a CPU performant alternative.
     """
-    if not THREAD_POOL.initialized:
-        THREAD_POOL.initialize(max_workers=10 * CPU_CORES)
+    _ensure_thread_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
         THREAD_POOL.pool, partial(function, *args, **kwargs),
@@ -318,8 +323,7 @@ async def in_process(
 
         See `in_thread` for an IO performant alternative.
     """
-    if not PROCESS_POOL.initialized:
-        PROCESS_POOL.initialize(max_workers=CPU_CORES)
+    _ensure_process_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
         PROCESS_POOL.pool, partial(function, *args, **kwargs),
@@ -525,6 +529,52 @@ async def force_loop_cycle() -> None:
     await asyncio.sleep(0)
 
 
+async def generate_in_thread(
+    generator_func: Callable[..., Generator[Y, S, None]],
+    *args: Any,
+    **kwargs: Any,
+) -> AsyncGenerator[Y, S]:
+    """Mimic `generator_func(*args, **kwargs)` in the configured thread pool.
+
+    Note that `generator_func(*args, **kwargs)` may return a generator or an
+    interator and both cases are handled rightfully.
+
+    Usage:
+
+        >>> from os import scandir
+
+        >>> async for entry in generate_in_thread(scandir, '.'):
+                print(entry.name)
+
+    Output:
+        ```
+        .gitignore
+        LICENSE.md
+        README.md
+        ...
+        ```
+
+    Calls to the generator are done serially and not concurrently.
+
+    The benefit of wrapping a generator with this function is that the
+    event-loop is free to schedule and wait another tasks in the mean time.
+    For instance, in a web server.
+    """
+    gen: Generator[Y, S, None] = generator_func(*args, **kwargs)
+    gen_sent: Any = None
+
+    def gen_next(val: S) -> Y:
+        with suppress(StopIteration):
+            return gen.send(val) if hasattr(gen, 'send') else next(gen)
+        raise StopAsyncIteration()
+
+    while True:
+        try:
+            gen_sent = yield await in_thread(gen_next, gen_sent)
+        except StopAsyncIteration:
+            return
+
+
 def schedule(
     awaitable: Awaitable[T],
     *,
@@ -567,6 +617,16 @@ def schedule(
     asyncio.create_task(awaitable).add_done_callback(_done_callback)
 
     return wrapper
+
+
+def _ensure_process_pool_is_initialized() -> None:
+    if not PROCESS_POOL.initialized:
+        PROCESS_POOL.initialize(max_workers=CPU_CORES)
+
+
+def _ensure_thread_pool_is_initialized() -> None:
+    if not THREAD_POOL.initialized:
+        THREAD_POOL.initialize(max_workers=10 * CPU_CORES)
 
 
 class ExecutorPool:

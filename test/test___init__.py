@@ -3,6 +3,9 @@ import asyncio
 from contextlib import (
     suppress,
 )
+from os import (
+    scandir,
+)
 from typing import (
     Any,
     List,
@@ -10,13 +13,14 @@ from typing import (
 
 # Local libraries
 from aioextensions import (
-    run_decorator,
     collect,
-    PROCESS_POOL,
-    resolve,
-    THREAD_POOL,
     in_thread,
     in_process,
+    generate_in_thread,
+    PROCESS_POOL,
+    resolve,
+    run_decorator,
+    THREAD_POOL,
 )
 
 
@@ -56,11 +60,12 @@ def test_executor_pool() -> None:
 
 
 @run_decorator
-async def test_unblock() -> None:
+async def test_in() -> None:
     await in_thread(sync)
     await in_thread(sync)
     await in_process(sync)
     await in_process(sync)
+    [_ async for _ in generate_in_thread(scandir)]  # type: ignore
 
 
 @run_decorator
