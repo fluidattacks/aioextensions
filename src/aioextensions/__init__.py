@@ -143,7 +143,7 @@ Usage:
     returning: 4
     results: (0, 1, 2, 3, 4)
 
-As is expected, all CPU cores were used and we were hardware-efficient!
+As expected, all CPU cores were used and we were hardware-efficient!
 
 ## Solving IO bound tasks efficiently
 
@@ -169,7 +169,7 @@ Usage:
             results = await collect([
                 # in_thread sends the task to a pool of threads
                 in_thread(io_bound_task, id)
-                # Let's solve 5 of those tasks in parallel!
+                # Let's solve 5 of those tasks concurrently!
                 for id in range(5)
             ])
             print('time:', time(), 'results:', results)
@@ -187,9 +187,9 @@ Usage:
     time: 1597623832 returning: 1
     time: 1597623832 results: (0, 1, 2, 3, 4)
 
-As is expected, all tasks were executed concurrently. This means that
-instead of waiting five seconds for five tasks (in serial) we just waited one
-second for all of them.
+As expected, all tasks were executed concurrently. This means that instead of
+waiting five seconds for five tasks (serially) we just waited one second for
+all of them.
 
 # Installing
 
@@ -198,14 +198,6 @@ second for all of them.
 # Using
 
     >>> from aioextensions import *  # to import everything
-    >>> from aioextensions import (  # recommended way
-            coolect,
-            in_thread,
-            in_process,
-            resolve,
-            schedule,
-            # ...
-        )
 
 Please read the documentation bellow for more details about every function.
 """
