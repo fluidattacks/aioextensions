@@ -10,7 +10,7 @@ from typing import (
 
 # Local libraries
 from aioextensions import (
-    block_decorator,
+    run_decorator,
     collect,
     PROCESS_POOL,
     resolve,
@@ -55,7 +55,7 @@ def test_executor_pool() -> None:
         pool.shutdown(wait=False)
 
 
-@block_decorator
+@run_decorator
 async def test_unblock() -> None:
     await unblock(sync)
     await unblock(sync)
@@ -63,7 +63,7 @@ async def test_unblock() -> None:
     await unblock_cpu(sync)
 
 
-@block_decorator
+@run_decorator
 async def test_collect_and_resolve() -> None:
     loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 

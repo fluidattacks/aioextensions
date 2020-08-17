@@ -274,68 +274,122 @@ def run(coroutine: Awaitable[T], *, debug: bool = False) -> T:
     return asyncio.run(coroutine, debug=debug)
 
 
-def block_decorator(function: F) -> F:
-    """Decorator to turn an asynchronous function into a synchronous one.
+async def unblock(
+    function: Callable[..., T],
+    *args: Any,
+    **kwargs: Any,
+) -> T:
+    """Execute function(*args, **kwargs) in the specified thread executor."""
+    if not THREAD_POOL.initialized:
+        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
 
-    Example:
-        >>> @block_decorator
-            async def do(a, b=0):
-                return a + b
+    return await asyncio.get_running_loop().run_in_executor(
+        THREAD_POOL.pool, partial(function, *args, **kwargs),
+    )
 
-        >>> do(1, b=2) == 3
 
-    This can be used as a bridge between synchronous and asynchronous code.
+async def unblock_cpu(
+    function: Callable[..., T],
+    *args: Any,
+    **kwargs: Any,
+) -> T:
+    """Execute function(*args, **kwargs) in the specified process executor."""
+    if not PROCESS_POOL.initialized:
+        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+
+    return await asyncio.get_running_loop().run_in_executor(
+        PROCESS_POOL.pool, partial(function, *args, **kwargs),
+    )
+
+
+async def collect(
+    awaitables: Iterable[Awaitable[T]],
+    *,
+    workers: int = 1024,
+    worker_greediness: int = 0,
+) -> Tuple[T, ...]:
+    """Resolve concurrently the input stream and return back in the same order.
+
+    The algorithm makes sure that at any point in time every worker is busy.
+    Also, at any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    The `worker_greediness` parameter controlls how much each worker can
+    process before waiting for you to retrieve results. This is important when
+    the input stream is big as it allows you to control memory usage.
+
+    .. tip::
+        This is similar to asyncio.as_completed. However this returns results
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
+
+    Usage:
+        >>> async def do(n):
+                print('running:', n)
+                await asyncio.sleep(1)
+                print('returning:', n)
+                return n
+
+        >>> iterable = map(do, range(5))
+
+        >>> results = await collect(iterable, workers=2)
+
+        >>> print(results)
+
+    Output:
+        ```
+        running: 0
+        running: 1
+        returning: 0
+        returning: 1
+        running: 2
+        running: 3
+        returning: 2
+        returning: 3
+        running: 4
+        returning: 4
+        (0, 1, 2, 3, 4)
+        ```
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream (opposite to asyncio.as_completed)
+
+    .. tip::
+        This approach may be many times faster than batching because
+        workers are independent of each other and they are constantly fetching
+        the next task as soon as they get free (as long as the greediness
+        allows them).
+
+    .. tip::
+        If awaitables is an instance of Sized (has `__len__` prototype).
+        This function will launch at most `len(awaitables)` workers.
     """
-
-    @wraps(function)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
-        return run(function(*args, **kwargs))
-
-    return cast(F, wrapper)
-
-
-class ExecutorPool:
-
-    def __init__(
-        self,
-        cls: Union[
-            Type[ProcessPoolExecutor],
-            Type[ThreadPoolExecutor],
-        ],
-    ) -> None:
-        self._cls = cls
-        self._pool: Optional[Executor] = None
-
-    def initialize(self, *, max_workers: Optional[int] = None) -> None:
-        if self._pool is not None:
-            self._pool.shutdown(wait=False)
-
-        self._pool = self._cls(max_workers=max_workers)
-
-    def shutdown(self, *, wait: bool) -> None:
-        if self._pool is not None:
-            self._pool.shutdown(wait=wait)
-            self._pool = None
-
-    @property
-    def pool(self) -> Executor:
-        if self._pool is None:
-            raise RuntimeError('Must call initialize first')
-
-        return self._pool
-
-    @property
-    def initialized(self) -> bool:
-        return self._pool is not None
-
-
-async def force_loop_cycle() -> None:
-    """Force the event loop to perform one cycle.
-
-    This can be used to suspend the execution of the current coroutine and
-    yield control back to the event-loop.
-    """
-    await asyncio.sleep(0)
+    return tuple([
+        await elem
+        for elem in resolve(
+            awaitables,
+            workers=workers,
+            worker_greediness=worker_greediness,
+        )
+    ])
 
 
 def resolve(  # noqa: mccabe
@@ -346,27 +400,8 @@ def resolve(  # noqa: mccabe
 ) -> Iterable[Awaitable[T]]:
     """Resolve concurrently the input stream and yield back in the same order.
 
-    The algorithm makes sure that at any point in time every worker is busy.
-    Also, at any point in time there will be at most _number of `workers`_
-    tasks being resolved concurrently.
-
-    The `worker_greediness` parameter controlls how much each worker can
-    process before waiting for you to retrieve results. This is important
-    when the input stream is big as it allows you to control the memory usage.
-
-    .. tip::
-        This is similar to asyncio.as_completed. However it allows you
-        to control how much resources are consumed throughout the execution,
-        for instance:
-
-        - How many open files will be opened at the same time
-        - How many HTTP requests will be performed to a service (rate limit)
-        - How many sockets will be opened concurrently
-        - Etc
-
-        This is useful for finite resources, for instance: the number
-        of sockets provided by the operative system is limited; going beyond it
-        would make the kernel to kill the program abruptly.
+    This works very similar to `collect` except it's lazy and allows you
+    to handle exceptions on singular elements.
 
     Usage:
         >>> async def do(n):
@@ -402,27 +437,7 @@ def resolve(  # noqa: mccabe
         got resolved result: 4
         ```
 
-    Args:
-        awaitables: An iterable (generator, list, tuple, set, etc) of
-            awaitables (coroutine, asyncio.Task, or asyncio.Future).
-        workers: The number of independent workers that will be processing
-            the input stream.
-        worker_greediness: How much tasks can a worker process before waiting
-            for you to retrieve its results. 0 means unlimited.
-
-    Yields:
-        A future with the result of the next ready task. Futures are yielded in
-        the same order of the input stream (opposite to asyncio.as_completed)
-
-    .. tip::
-        This approach may be many times faster than batching because
-        workers are independent of each other and they are constantly fetching
-        the next task as soon as they get free (as long as the greediness
-        allows them).
-
-    .. tip::
-        If awaitables is an instance of Sized (has `__len__` prototype).
-        This function will launch at most `len(awaitables)` workers.
+    See `collect` for more information on the algorithm used and parameters.
     """
     if workers < 1:
         raise ValueError('workers must be >= 1')
@@ -470,52 +485,48 @@ def resolve(  # noqa: mccabe
         yield cast(Awaitable[T], get_one(index))
 
 
-async def collect(
-    awaitables: Iterable[Awaitable[T]],
-    *,
-    workers: int = 1024,
-    worker_greediness: int = 0,
-) -> Tuple[T, ...]:
-    """Resolve concurrently the input stream and return back in the same order.
+class ExecutorPool:
 
-    See `resolve` for more information on the algorithm used and parameters.
+    def __init__(
+        self,
+        cls: Union[
+            Type[ProcessPoolExecutor],
+            Type[ThreadPoolExecutor],
+        ],
+    ) -> None:
+        self._cls = cls
+        self._pool: Optional[Executor] = None
 
-    Usage:
-        >>> async def do(n):
-                print('running:', n)
-                await asyncio.sleep(1)
-                print('returning:', n)
-                return n
+    def initialize(self, *, max_workers: Optional[int] = None) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=False)
 
-        >>> iterable = map(do, range(5))
+        self._pool = self._cls(max_workers=max_workers)
 
-        >>> results = await collect(iterable, workers=2)
+    def shutdown(self, *, wait: bool) -> None:
+        if self._pool is not None:
+            self._pool.shutdown(wait=wait)
+            self._pool = None
 
-        >>> print(results)
+    @property
+    def pool(self) -> Executor:
+        if self._pool is None:
+            raise RuntimeError('Must call initialize first')
 
-    Output:
-        ```
-        running: 0
-        running: 1
-        returning: 0
-        returning: 1
-        running: 2
-        running: 3
-        returning: 2
-        returning: 3
-        running: 4
-        returning: 4
-        (0, 1, 2, 3, 4)
-        ```
+        return self._pool
+
+    @property
+    def initialized(self) -> bool:
+        return self._pool is not None
+
+
+async def force_loop_cycle() -> None:
+    """Force the event loop to perform one cycle.
+
+    This can be used to suspend the execution of the current coroutine and
+    yield control back to the event-loop until the next cycle.
     """
-    return tuple([
-        await elem
-        for elem in resolve(
-            awaitables,
-            workers=workers,
-            worker_greediness=worker_greediness,
-        )
-    ])
+    await asyncio.sleep(0)
 
 
 def schedule(
@@ -537,32 +548,25 @@ def schedule(
     return wrapper
 
 
-async def unblock(
-    function: Callable[..., T],
-    *args: Any,
-    **kwargs: Any,
-) -> T:
-    """Execute function(*args, **kwargs) in the specified thread executor."""
-    if not THREAD_POOL.initialized:
-        THREAD_POOL.initialize(max_workers=10 * CPU_COUNT)
+def run_decorator(function: F) -> F:
+    """Decorator to turn an asynchronous function into a synchronous one.
 
-    return await asyncio.get_running_loop().run_in_executor(
-        THREAD_POOL.pool, partial(function, *args, **kwargs),
-    )
+    Example:
+        >>> @run_decorator
+            async def do(a, b=0):
+                return a + b
 
+        >>> do(1, b=2) == 3
 
-async def unblock_cpu(
-    function: Callable[..., T],
-    *args: Any,
-    **kwargs: Any,
-) -> T:
-    """Execute function(*args, **kwargs) in the specified process executor."""
-    if not PROCESS_POOL.initialized:
-        PROCESS_POOL.initialize(max_workers=CPU_COUNT)
+    This can be used as a bridge between synchronous and asynchronous code.
+    We use it mostly in tests for its convenience over pytest-asyncio plugin.
+    """
 
-    return await asyncio.get_running_loop().run_in_executor(
-        PROCESS_POOL.pool, partial(function, *args, **kwargs),
-    )
+    @wraps(function)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return run(function(*args, **kwargs))
+
+    return cast(F, wrapper)
 
 
 # Constants
