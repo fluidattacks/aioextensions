@@ -434,17 +434,24 @@ async def collect(
     awaitables: Iterable[Awaitable[T]],
     *,
     workers: int = 1024,
-    worker_greediness: int = 0,
 ) -> Tuple[T, ...]:
     """Resolve concurrently the input stream and return back in the same order.
 
-    The algorithm makes sure that at any point in time every worker is busy.
-    Also, at any point in time there will be at most _number of `workers`_
+    At any point in time there will be at most _number of `workers`_
     tasks being resolved concurrently.
 
-    The `worker_greediness` parameter controlls how much each worker can
-    process before waiting for you to retrieve results. This is important when
-    the input stream is big as it allows you to control memory usage.
+    Aditionally, the algorithm makes sure that at any point in time every
+    worker is busy.
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+
+    Returns:
+        A tuple with the results of executing each awaitable in the event loop.
+        Results are returned in the same order of the input stream.
 
     Usage:
         >>> async def do(n):
@@ -475,7 +482,7 @@ async def collect(
         ```
 
     .. tip::
-        This is similar to asyncio.as_completed. However this returns results
+        This is similar to asyncio.as_completed. However results are returned
         in order and allows you to control how much resources are consumed
         throughout the execution, for instance:
 
@@ -488,33 +495,15 @@ async def collect(
         of sockets provided by the operative system is limited; going beyond it
         would make the kernel to kill the program abruptly.
 
-    Args:
-        awaitables: An iterable (generator, list, tuple, set, etc) of
-            awaitables (coroutine, asyncio.Task, or asyncio.Future).
-        workers: The number of independent workers that will be processing
-            the input stream.
-        worker_greediness: How much tasks can a worker process before waiting
-            for you to retrieve its results. 0 means unlimited.
-
-    Yields:
-        A future with the result of the next ready task. Futures are yielded in
-        the same order of the input stream (opposite to asyncio.as_completed)
-
-    .. tip::
-        This approach may be many times faster than batching because
-        workers are independent of each other and they are constantly fetching
-        the next task as soon as they are free (if greediness allows them).
-
-    .. tip::
-        If awaitables is an instance of Sized (has `__len__` prototype).
-        This function will launch at most `len(awaitables)` workers.
+    If awaitables is an instance of Sized (has `__len__` prototype).
+    This function will launch at most `len(awaitables)` workers.
     """
     return tuple([
         await elem
         for elem in resolve(
             awaitables,
             workers=workers,
-            worker_greediness=worker_greediness,
+            worker_greediness=0,
         )
     ])
 
@@ -527,8 +516,24 @@ def resolve(  # noqa: mccabe
 ) -> Iterable[Awaitable[T]]:
     """Resolve concurrently the input stream and yield back in the same order.
 
-    This works very similar to `collect` except it's lazy and allows you
-    to handle exceptions on singular elements.
+    At any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    Aditionally, the algorithm makes sure that at any point in time every
+    worker is busy (if greediness allow them).
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited. Set to non-zero
+            in order to upper-bound memory usage through the execution.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream.
 
     Usage:
         >>> async def do(n):
@@ -564,7 +569,22 @@ def resolve(  # noqa: mccabe
         got resolved result: 4
         ```
 
-    See `collect` for more information on the algorithm used and parameters.
+    .. tip::
+        This is similar to asyncio.as_completed. However results are returned
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
+
+    If awaitables is an instance of Sized (has `__len__` prototype).
+    This function will launch at most `len(awaitables)` workers.
     """
     if workers < 1:
         raise ValueError('workers must be >= 1')

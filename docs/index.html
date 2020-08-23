@@ -220,7 +220,7 @@ all of them.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L830" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L850" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -658,17 +658,24 @@ async def collect(
     awaitables: Iterable[Awaitable[T]],
     *,
     workers: int = 1024,
-    worker_greediness: int = 0,
 ) -&gt; Tuple[T, ...]:
     &#34;&#34;&#34;Resolve concurrently the input stream and return back in the same order.
 
-    The algorithm makes sure that at any point in time every worker is busy.
-    Also, at any point in time there will be at most _number of `workers`_
+    At any point in time there will be at most _number of `workers`_
     tasks being resolved concurrently.
 
-    The `worker_greediness` parameter controlls how much each worker can
-    process before waiting for you to retrieve results. This is important when
-    the input stream is big as it allows you to control memory usage.
+    Aditionally, the algorithm makes sure that at any point in time every
+    worker is busy.
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+
+    Returns:
+        A tuple with the results of executing each awaitable in the event loop.
+        Results are returned in the same order of the input stream.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -699,7 +706,7 @@ async def collect(
         ```
 
     .. tip::
-        This is similar to asyncio.as_completed. However this returns results
+        This is similar to asyncio.as_completed. However results are returned
         in order and allows you to control how much resources are consumed
         throughout the execution, for instance:
 
@@ -712,33 +719,15 @@ async def collect(
         of sockets provided by the operative system is limited; going beyond it
         would make the kernel to kill the program abruptly.
 
-    Args:
-        awaitables: An iterable (generator, list, tuple, set, etc) of
-            awaitables (coroutine, asyncio.Task, or asyncio.Future).
-        workers: The number of independent workers that will be processing
-            the input stream.
-        worker_greediness: How much tasks can a worker process before waiting
-            for you to retrieve its results. 0 means unlimited.
-
-    Yields:
-        A future with the result of the next ready task. Futures are yielded in
-        the same order of the input stream (opposite to asyncio.as_completed)
-
-    .. tip::
-        This approach may be many times faster than batching because
-        workers are independent of each other and they are constantly fetching
-        the next task as soon as they are free (if greediness allows them).
-
-    .. tip::
-        If awaitables is an instance of Sized (has `__len__` prototype).
-        This function will launch at most `len(awaitables)` workers.
+    If awaitables is an instance of Sized (has `__len__` prototype).
+    This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     return tuple([
         await elem
         for elem in resolve(
             awaitables,
             workers=workers,
-            worker_greediness=worker_greediness,
+            worker_greediness=0,
         )
     ])
 
@@ -751,8 +740,24 @@ def resolve(  # noqa: mccabe
 ) -&gt; Iterable[Awaitable[T]]:
     &#34;&#34;&#34;Resolve concurrently the input stream and yield back in the same order.
 
-    This works very similar to `collect` except it&#39;s lazy and allows you
-    to handle exceptions on singular elements.
+    At any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    Aditionally, the algorithm makes sure that at any point in time every
+    worker is busy (if greediness allow them).
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited. Set to non-zero
+            in order to upper-bound memory usage through the execution.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -788,7 +793,22 @@ def resolve(  # noqa: mccabe
         got resolved result: 4
         ```
 
-    See `collect` for more information on the algorithm used and parameters.
+    .. tip::
+        This is similar to asyncio.as_completed. However results are returned
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
+
+    If awaitables is an instance of Sized (has `__len__` prototype).
+    This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     if workers &lt; 1:
         raise ValueError(&#39;workers must be &gt;= 1&#39;)
@@ -1377,16 +1397,26 @@ instance, lower your bill in DynamoDB or prevent a cooldown period
 </details>
 </dd>
 <dt id="aioextensions.collect"><code class="name flex">
-<span>async def <span class="ident">collect</span></span>(<span>awaitables: Iterable[Awaitable[~T]], *, workers: int = 1024, worker_greediness: int = 0) ‑> Tuple[~T, ...]</span>
+<span>async def <span class="ident">collect</span></span>(<span>awaitables: Iterable[Awaitable[~T]], *, workers: int = 1024) ‑> Tuple[~T, ...]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve concurrently the input stream and return back in the same order.</p>
-<p>The algorithm makes sure that at any point in time every worker is busy.
-Also, at any point in time there will be at most <em>number of <code>workers</code></em>
+<p>At any point in time there will be at most <em>number of <code>workers</code></em>
 tasks being resolved concurrently.</p>
-<p>The <code>worker_greediness</code> parameter controlls how much each worker can
-process before waiting for you to retrieve results. This is important when
-the input stream is big as it allows you to control memory usage.</p>
+<p>Aditionally, the algorithm makes sure that at any point in time every
+worker is busy.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>awaitables</code></strong></dt>
+<dd>An iterable (generator, list, tuple, set, etc) of
+awaitables (coroutine, asyncio.Task, or asyncio.Future).</dd>
+<dt><strong><code>workers</code></strong></dt>
+<dd>The number of independent workers that will be processing
+the input stream.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A tuple with the results of executing each awaitable in the event loop.
+Results are returned in the same order of the input stream.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
         print(f'running: {n}')
@@ -1415,7 +1445,7 @@ results: (0, 1, 2, 3, 4)
 </code></pre>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>This is similar to asyncio.as_completed. However this returns results
+<p>This is similar to asyncio.as_completed. However results are returned
 in order and allows you to control how much resources are consumed
 throughout the execution, for instance:</p>
 <ul>
@@ -1428,49 +1458,35 @@ throughout the execution, for instance:</p>
 of sockets provided by the operative system is limited; going beyond it
 would make the kernel to kill the program abruptly.</p>
 </div>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>awaitables</code></strong></dt>
-<dd>An iterable (generator, list, tuple, set, etc) of
-awaitables (coroutine, asyncio.Task, or asyncio.Future).</dd>
-<dt><strong><code>workers</code></strong></dt>
-<dd>The number of independent workers that will be processing
-the input stream.</dd>
-<dt><strong><code>worker_greediness</code></strong></dt>
-<dd>How much tasks can a worker process before waiting
-for you to retrieve its results. 0 means unlimited.</dd>
-</dl>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>This approach may be many times faster than batching because
-workers are independent of each other and they are constantly fetching
-the next task as soon as they are free (if greediness allows them).</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
 <p>If awaitables is an instance of Sized (has <code>__len__</code> prototype).
-This function will launch at most <code>len(awaitables)</code> workers.</p>
-</div></div>
+This function will launch at most <code>len(awaitables)</code> workers.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L433-L519" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L433-L508" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[T]],
     *,
     workers: int = 1024,
-    worker_greediness: int = 0,
 ) -&gt; Tuple[T, ...]:
     &#34;&#34;&#34;Resolve concurrently the input stream and return back in the same order.
 
-    The algorithm makes sure that at any point in time every worker is busy.
-    Also, at any point in time there will be at most _number of `workers`_
+    At any point in time there will be at most _number of `workers`_
     tasks being resolved concurrently.
 
-    The `worker_greediness` parameter controlls how much each worker can
-    process before waiting for you to retrieve results. This is important when
-    the input stream is big as it allows you to control memory usage.
+    Aditionally, the algorithm makes sure that at any point in time every
+    worker is busy.
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+
+    Returns:
+        A tuple with the results of executing each awaitable in the event loop.
+        Results are returned in the same order of the input stream.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -1501,7 +1517,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
         ```
 
     .. tip::
-        This is similar to asyncio.as_completed. However this returns results
+        This is similar to asyncio.as_completed. However results are returned
         in order and allows you to control how much resources are consumed
         throughout the execution, for instance:
 
@@ -1514,33 +1530,15 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
         of sockets provided by the operative system is limited; going beyond it
         would make the kernel to kill the program abruptly.
 
-    Args:
-        awaitables: An iterable (generator, list, tuple, set, etc) of
-            awaitables (coroutine, asyncio.Task, or asyncio.Future).
-        workers: The number of independent workers that will be processing
-            the input stream.
-        worker_greediness: How much tasks can a worker process before waiting
-            for you to retrieve its results. 0 means unlimited.
-
-    Yields:
-        A future with the result of the next ready task. Futures are yielded in
-        the same order of the input stream (opposite to asyncio.as_completed)
-
-    .. tip::
-        This approach may be many times faster than batching because
-        workers are independent of each other and they are constantly fetching
-        the next task as soon as they are free (if greediness allows them).
-
-    .. tip::
-        If awaitables is an instance of Sized (has `__len__` prototype).
-        This function will launch at most `len(awaitables)` workers.
+    If awaitables is an instance of Sized (has `__len__` prototype).
+    This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     return tuple([
         await elem
         for elem in resolve(
             awaitables,
             workers=workers,
-            worker_greediness=worker_greediness,
+            worker_greediness=0,
         )
     ])</code></pre>
 </details>
@@ -1550,8 +1548,26 @@ This function will launch at most <code>len(awaitables)</code> workers.</p>
 </code></dt>
 <dd>
 <div class="desc"><p>Resolve concurrently the input stream and yield back in the same order.</p>
-<p>This works very similar to <code><a title="aioextensions.collect" href="#aioextensions.collect">collect()</a></code> except it's lazy and allows you
-to handle exceptions on singular elements.</p>
+<p>At any point in time there will be at most <em>number of <code>workers</code></em>
+tasks being resolved concurrently.</p>
+<p>Aditionally, the algorithm makes sure that at any point in time every
+worker is busy (if greediness allow them).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>awaitables</code></strong></dt>
+<dd>An iterable (generator, list, tuple, set, etc) of
+awaitables (coroutine, asyncio.Task, or asyncio.Future).</dd>
+<dt><strong><code>workers</code></strong></dt>
+<dd>The number of independent workers that will be processing
+the input stream.</dd>
+<dt><strong><code>worker_greediness</code></strong></dt>
+<dd>How much tasks can a worker process before waiting
+for you to retrieve its results. 0 means unlimited. Set to non-zero
+in order to upper-bound memory usage through the execution.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<p>A future with the result of the next ready task. Futures are yielded in
+the same order of the input stream.</p>
 <h2 id="usage">Usage</h2>
 <pre><code class="python">&gt;&gt;&gt; async def do(n):
         print(f'running: {n}')
@@ -1584,11 +1600,27 @@ running: 4
 returning: 4
 got resolved result: 4
 </code></pre>
-<p>See <code><a title="aioextensions.collect" href="#aioextensions.collect">collect()</a></code> for more information on the algorithm used and parameters.</p></div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This is similar to asyncio.as_completed. However results are returned
+in order and allows you to control how much resources are consumed
+throughout the execution, for instance:</p>
+<ul>
+<li>How many open files will be opened at the same time</li>
+<li>How many HTTP requests will be performed to a service (rate limit)</li>
+<li>How many sockets will be opened concurrently</li>
+<li>Etc</li>
+</ul>
+<p>This is useful for finite resources, for instance: the number
+of sockets provided by the operative system is limited; going beyond it
+would make the kernel to kill the program abruptly.</p>
+</div>
+<p>If awaitables is an instance of Sized (has <code>__len__</code> prototype).
+This function will launch at most <code>len(awaitables)</code> workers.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L522-L612" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L511-L632" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[T]],
@@ -1598,8 +1630,24 @@ got resolved result: 4
 ) -&gt; Iterable[Awaitable[T]]:
     &#34;&#34;&#34;Resolve concurrently the input stream and yield back in the same order.
 
-    This works very similar to `collect` except it&#39;s lazy and allows you
-    to handle exceptions on singular elements.
+    At any point in time there will be at most _number of `workers`_
+    tasks being resolved concurrently.
+
+    Aditionally, the algorithm makes sure that at any point in time every
+    worker is busy (if greediness allow them).
+
+    Args:
+        awaitables: An iterable (generator, list, tuple, set, etc) of
+            awaitables (coroutine, asyncio.Task, or asyncio.Future).
+        workers: The number of independent workers that will be processing
+            the input stream.
+        worker_greediness: How much tasks can a worker process before waiting
+            for you to retrieve its results. 0 means unlimited. Set to non-zero
+            in order to upper-bound memory usage through the execution.
+
+    Yields:
+        A future with the result of the next ready task. Futures are yielded in
+        the same order of the input stream.
 
     Usage:
         &gt;&gt;&gt; async def do(n):
@@ -1635,7 +1683,22 @@ got resolved result: 4
         got resolved result: 4
         ```
 
-    See `collect` for more information on the algorithm used and parameters.
+    .. tip::
+        This is similar to asyncio.as_completed. However results are returned
+        in order and allows you to control how much resources are consumed
+        throughout the execution, for instance:
+
+        - How many open files will be opened at the same time
+        - How many HTTP requests will be performed to a service (rate limit)
+        - How many sockets will be opened concurrently
+        - Etc
+
+        This is useful for finite resources, for instance: the number
+        of sockets provided by the operative system is limited; going beyond it
+        would make the kernel to kill the program abruptly.
+
+    If awaitables is an instance of Sized (has `__len__` prototype).
+    This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     if workers &lt; 1:
         raise ValueError(&#39;workers must be &gt;= 1&#39;)
@@ -1698,7 +1761,7 @@ Useful for cooperative initialization.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L615-L629" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L635-L649" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform one cycle.
@@ -1743,7 +1806,7 @@ For instance, in a web server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L632-L675" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L652-L695" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def generate_in_thread(
     generator_func: Callable[..., Generator[Y, S, None]],
@@ -1824,7 +1887,7 @@ the moment result() is called and never otherwise.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L678-L724" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L698-L744" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[T],
@@ -1895,7 +1958,7 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L785-L808" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L805-L828" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
@@ -1939,7 +2002,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L737-L782" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L757-L802" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
     &#34;&#34;&#34;Object representing a pool of Processes or Threads.
@@ -1996,7 +2059,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L771-L777" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L791-L797" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -2013,7 +2076,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L779-L782" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L799-L802" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -2034,7 +2097,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L753-L762" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L773-L782" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;Initialize the executor with a cap of at most `max_workers`.
@@ -2056,7 +2119,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L764-L769" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L784-L789" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
