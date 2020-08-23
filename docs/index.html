@@ -753,7 +753,7 @@ def resolve(  # noqa: mccabe
             the input stream.
         worker_greediness: How much tasks can a worker process before waiting
             for you to retrieve its results. 0 means unlimited. Set to non-zero
-            in order to upper-bound memory usage through the execution.
+            in order to upper-bound memory usage throughout the execution.
 
     Yields:
         A future with the result of the next ready task. Futures are yielded in
@@ -1563,7 +1563,7 @@ the input stream.</dd>
 <dt><strong><code>worker_greediness</code></strong></dt>
 <dd>How much tasks can a worker process before waiting
 for you to retrieve its results. 0 means unlimited. Set to non-zero
-in order to upper-bound memory usage through the execution.</dd>
+in order to upper-bound memory usage throughout the execution.</dd>
 </dl>
 <h2 id="yields">Yields</h2>
 <p>A future with the result of the next ready task. Futures are yielded in
@@ -1643,7 +1643,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
             the input stream.
         worker_greediness: How much tasks can a worker process before waiting
             for you to retrieve its results. 0 means unlimited. Set to non-zero
-            in order to upper-bound memory usage through the execution.
+            in order to upper-bound memory usage throughout the execution.
 
     Yields:
         A future with the result of the next ready task. Futures are yielded in

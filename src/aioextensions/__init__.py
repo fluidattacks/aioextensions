@@ -529,7 +529,7 @@ def resolve(  # noqa: mccabe
             the input stream.
         worker_greediness: How much tasks can a worker process before waiting
             for you to retrieve its results. 0 means unlimited. Set to non-zero
-            in order to upper-bound memory usage through the execution.
+            in order to upper-bound memory usage throughout the execution.
 
     Yields:
         A future with the result of the next ready task. Futures are yielded in
