@@ -14,7 +14,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries",
   "Typing :: Typed",
 ]
-description = ""
+description = "High performance functions to work with the async IO"
 documentation = "https://kamadorueda.github.io/aioextensions"
 homepage = "https://kamadorueda.github.io/aioextensions"
 license = "MIT"
