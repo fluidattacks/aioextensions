@@ -212,7 +212,10 @@ from concurrent.futures import (
     ProcessPoolExecutor,
     ThreadPoolExecutor,
 )
-from contextlib import suppress
+from contextlib import (
+    asynccontextmanager,
+    suppress,
+)
 from functools import (
     partial,
     wraps,
@@ -226,6 +229,7 @@ from os import (
 from typing import (
     Any,
     AsyncGenerator,
+    AsyncIterator,
     Awaitable,
     Callable,
     cast,
@@ -742,6 +746,35 @@ def schedule(
     asyncio.create_task(awaitable).add_done_callback(_done_callback)
 
     return wrapper
+
+
+class Semaphore(asyncio.Semaphore):
+    """Same as `asyncio.Semaphore` plus some useful methods."""
+
+    @asynccontextmanager
+    async def acquire_many(self, times: int) -> AsyncIterator[None]:
+        """Acquire a semaphore many times, and release on exit.
+
+        Usage:
+
+            >>> async with semaphore.acquire_many(5):
+                    # Work with shared resource
+                    ...
+
+        """
+        if times <= 0:
+            raise ValueError('times must be >= 1')
+
+        try:
+            await collect([self.acquire() for _ in range(times)])
+            yield
+        finally:
+            for _ in range(times):
+                self.release()
+
+
+class BoundedSemaphore(Semaphore, asyncio.BoundedSemaphore):
+    """Same as `asyncio.BoundedSemaphore` plus some useful methods."""
 
 
 def _ensure_process_pool_is_initialized() -> None:

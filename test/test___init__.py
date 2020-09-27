@@ -16,6 +16,7 @@ import pytest
 
 # Local libraries
 from aioextensions import (
+    BoundedSemaphore,
     collect,
     in_thread,
     in_process,
@@ -24,6 +25,7 @@ from aioextensions import (
     rate_limited,
     resolve,
     run_decorator,
+    Semaphore,
     THREAD_POOL,
 )
 
@@ -155,3 +157,30 @@ async def test_collect_and_resolve() -> None:
             results.append('catched')
     assert round(loop.time() - start, 1) == 0.4
     assert results == [0, 1, 2, 'catched', 4]
+
+
+@run_decorator
+async def test_acquire() -> None:
+    for semaphore_cls in (BoundedSemaphore, Semaphore):
+        semaphore = semaphore_cls(10)
+
+        assert semaphore._value == 10
+
+        async with semaphore.acquire_many(5):
+            assert semaphore._value == 5
+
+            async with semaphore.acquire_many(5):
+                assert semaphore._value == 0
+
+            assert semaphore._value == 5
+
+            async with semaphore.acquire_many(5):
+                assert semaphore._value == 0
+
+            assert semaphore._value == 5
+
+        assert semaphore._value == 10
+
+        with pytest.raises(ValueError):
+            async with semaphore.acquire_many(0):
+                pass

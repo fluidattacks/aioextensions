@@ -220,7 +220,7 @@ all of them.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L850" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L883" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -436,7 +436,10 @@ from concurrent.futures import (
     ProcessPoolExecutor,
     ThreadPoolExecutor,
 )
-from contextlib import suppress
+from contextlib import (
+    asynccontextmanager,
+    suppress,
+)
 from functools import (
     partial,
     wraps,
@@ -450,6 +453,7 @@ from os import (
 from typing import (
     Any,
     AsyncGenerator,
+    AsyncIterator,
     Awaitable,
     Callable,
     cast,
@@ -968,6 +972,35 @@ def schedule(
     return wrapper
 
 
+class Semaphore(asyncio.Semaphore):
+    &#34;&#34;&#34;Same as `asyncio.Semaphore` plus some useful methods.&#34;&#34;&#34;
+
+    @asynccontextmanager
+    async def acquire_many(self, times: int) -&gt; AsyncIterator[None]:
+        &#34;&#34;&#34;Acquire a semaphore many times, and release on exit.
+
+        Usage:
+
+            &gt;&gt;&gt; async with semaphore.acquire_many(5):
+                    # Work with shared resource
+                    ...
+
+        &#34;&#34;&#34;
+        if times &lt;= 0:
+            raise ValueError(&#39;times must be &gt;= 1&#39;)
+
+        try:
+            await collect([self.acquire() for _ in range(times)])
+            yield
+        finally:
+            for _ in range(times):
+                self.release()
+
+
+class BoundedSemaphore(Semaphore, asyncio.BoundedSemaphore):
+    &#34;&#34;&#34;Same as `asyncio.BoundedSemaphore` plus some useful methods.&#34;&#34;&#34;
+
+
 def _ensure_process_pool_is_initialized() -&gt; None:
     if not PROCESS_POOL.initialized:
         PROCESS_POOL.initialize(max_workers=CPU_CORES)
@@ -1126,7 +1159,7 @@ installs <code>uvloop</code> (the fastest event-loop implementation out there) f
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L256-L276" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L260-L280" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run(coroutine: Awaitable[T], *, debug: bool = False) -&gt; T:
     &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
@@ -1170,7 +1203,7 @@ limitations that the <a href="https://realpython.com/python-gil">GIL</a> imposes
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L279-L304" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L283-L308" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def in_thread(
     function: Callable[..., T],
@@ -1221,7 +1254,7 @@ expense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L307-L334" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L311-L338" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def in_process(
     function: Callable[..., T],
@@ -1298,7 +1331,7 @@ instance, lower your bill in DynamoDB or prevent a cooldown period
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L337-L430" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L341-L434" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def rate_limited(
     *,
@@ -1463,7 +1496,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L433-L508" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L437-L512" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[T]],
@@ -1620,7 +1653,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L511-L632" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L515-L636" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[T]],
@@ -1761,7 +1794,7 @@ Useful for cooperative initialization.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L635-L649" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L639-L653" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform one cycle.
@@ -1806,7 +1839,7 @@ For instance, in a web server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L652-L695" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L656-L699" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def generate_in_thread(
     generator_func: Callable[..., Generator[Y, S, None]],
@@ -1887,7 +1920,7 @@ the moment result() is called and never otherwise.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L698-L744" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L702-L748" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[T],
@@ -1958,7 +1991,7 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L805-L828" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L838-L861" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
@@ -1991,6 +2024,121 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
+<dt id="aioextensions.Semaphore"><code class="flex name class">
+<span>class <span class="ident">Semaphore</span></span>
+<span>(</span><span>value=1, *, loop=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Same as <code>asyncio.Semaphore</code> plus some useful methods.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L751-L773" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class Semaphore(asyncio.Semaphore):
+    &#34;&#34;&#34;Same as `asyncio.Semaphore` plus some useful methods.&#34;&#34;&#34;
+
+    @asynccontextmanager
+    async def acquire_many(self, times: int) -&gt; AsyncIterator[None]:
+        &#34;&#34;&#34;Acquire a semaphore many times, and release on exit.
+
+        Usage:
+
+            &gt;&gt;&gt; async with semaphore.acquire_many(5):
+                    # Work with shared resource
+                    ...
+
+        &#34;&#34;&#34;
+        if times &lt;= 0:
+            raise ValueError(&#39;times must be &gt;= 1&#39;)
+
+        try:
+            await collect([self.acquire() for _ in range(times)])
+            yield
+        finally:
+            for _ in range(times):
+                self.release()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>asyncio.locks.Semaphore</li>
+<li>asyncio.locks._ContextManagerMixin</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="aioextensions.BoundedSemaphore" href="#aioextensions.BoundedSemaphore">BoundedSemaphore</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="aioextensions.Semaphore.acquire_many"><code class="name flex">
+<span>async def <span class="ident">acquire_many</span></span>(<span>self, times: int) ‑> AsyncIterator[NoneType]</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Acquire a semaphore many times, and release on exit.</p>
+<h2 id="usage">Usage</h2>
+<pre><code class="python">&gt;&gt;&gt; async with semaphore.acquire_many(5):
+        # Work with shared resource
+        ...
+</code></pre></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L754-L773" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">@asynccontextmanager
+async def acquire_many(self, times: int) -&gt; AsyncIterator[None]:
+    &#34;&#34;&#34;Acquire a semaphore many times, and release on exit.
+
+    Usage:
+
+        &gt;&gt;&gt; async with semaphore.acquire_many(5):
+                # Work with shared resource
+                ...
+
+    &#34;&#34;&#34;
+    if times &lt;= 0:
+        raise ValueError(&#39;times must be &gt;= 1&#39;)
+
+    try:
+        await collect([self.acquire() for _ in range(times)])
+        yield
+    finally:
+        for _ in range(times):
+            self.release()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="aioextensions.BoundedSemaphore"><code class="flex name class">
+<span>class <span class="ident">BoundedSemaphore</span></span>
+<span>(</span><span>value=1, *, loop=None)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Same as <code>asyncio.BoundedSemaphore</code> plus some useful methods.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L776-L777" class="git-link">Browse git</a>
+</summary>
+<pre><code class="python">class BoundedSemaphore(Semaphore, asyncio.BoundedSemaphore):
+    &#34;&#34;&#34;Same as `asyncio.BoundedSemaphore` plus some useful methods.&#34;&#34;&#34;</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="aioextensions.Semaphore" href="#aioextensions.Semaphore">Semaphore</a></li>
+<li>asyncio.locks.BoundedSemaphore</li>
+<li>asyncio.locks.Semaphore</li>
+<li>asyncio.locks._ContextManagerMixin</li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="aioextensions.Semaphore" href="#aioextensions.Semaphore">Semaphore</a></b></code>:
+<ul class="hlist">
+<li><code><a title="aioextensions.Semaphore.acquire_many" href="#aioextensions.Semaphore.acquire_many">acquire_many</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
 <dt id="aioextensions.ExecutorPool"><code class="flex name class">
 <span>class <span class="ident">ExecutorPool</span></span>
 <span>(</span><span>cls: Union[Type[concurrent.futures.process.ProcessPoolExecutor], Type[concurrent.futures.thread.ThreadPoolExecutor]])</span>
@@ -2002,7 +2150,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L757-L802" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L790-L835" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
     &#34;&#34;&#34;Object representing a pool of Processes or Threads.
@@ -2059,7 +2207,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L791-L797" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L824-L830" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
@@ -2076,7 +2224,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L799-L802" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L832-L835" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -2097,7 +2245,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L773-L782" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L806-L815" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;Initialize the executor with a cap of at most `max_workers`.
@@ -2119,7 +2267,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L784-L789" class="git-link">Browse git</a>
+<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L817-L822" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
     &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
@@ -2177,6 +2325,15 @@ if never needed.</p></div>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
+<li>
+<h4><code><a title="aioextensions.Semaphore" href="#aioextensions.Semaphore">Semaphore</a></code></h4>
+<ul class="">
+<li><code><a title="aioextensions.Semaphore.acquire_many" href="#aioextensions.Semaphore.acquire_many">acquire_many</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="aioextensions.BoundedSemaphore" href="#aioextensions.BoundedSemaphore">BoundedSemaphore</a></code></h4>
+</li>
 <li>
 <h4><code><a title="aioextensions.ExecutorPool" href="#aioextensions.ExecutorPool">ExecutorPool</a></code></h4>
 <ul class="">
