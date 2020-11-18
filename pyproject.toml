@@ -17,6 +17,9 @@ classifiers = [
 description = "High performance functions to work with the async IO"
 documentation = "https://kamadorueda.github.io/aioextensions"
 homepage = "https://kamadorueda.github.io/aioextensions"
+include = [
+  "test/**/*",
+]
 license = "MIT"
 name = "aioextensions"
 packages = [
