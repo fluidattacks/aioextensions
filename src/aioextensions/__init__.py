@@ -195,6 +195,10 @@ all of them.
 
     $ pip install aioextensions
 
+    # Optionally if you want uvloop support (not available on Windows)
+
+    $ pip install aioextensions[full]
+
 # Using
 
     >>> from aioextensions import *  # to import everything
@@ -245,7 +249,12 @@ from typing import (
 )
 
 # Third party libraries
-import uvloop
+try:
+    # Attempt to install uvloop (optional dependency)
+    import uvloop
+    UVLOOP = uvloop
+except ImportError:
+    UVLOOP = None
 
 # Constants
 F = TypeVar('F', bound=Callable[..., Any])  # pylint: disable=invalid-name
@@ -271,12 +280,15 @@ def run(coroutine: Awaitable[T], *, debug: bool = False) -> T:
         >>> 3
 
     This function acts as a drop-in replacement of asyncio.run and
-    installs `uvloop` (the fastest event-loop implementation out there) first.
+    installs `uvloop` (the fastest event-loop implementation out there) if
+    available.
 
     .. tip::
         Use this as the entrypoint for your program.
     """
-    uvloop.install()
+    if UVLOOP is not None:
+        UVLOOP.install()
+
     return asyncio.run(coroutine, debug=debug)
 
 

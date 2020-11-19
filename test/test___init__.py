@@ -164,22 +164,22 @@ async def test_acquire() -> None:
     for semaphore_cls in (BoundedSemaphore, Semaphore):
         semaphore = semaphore_cls(10)
 
-        assert semaphore._value == 10
+        assert semaphore._value == 10  # type: ignore
 
         async with semaphore.acquire_many(5):
-            assert semaphore._value == 5
+            assert semaphore._value == 5  # type: ignore
 
             async with semaphore.acquire_many(5):
-                assert semaphore._value == 0
+                assert semaphore._value == 0  # type: ignore
 
-            assert semaphore._value == 5
+            assert semaphore._value == 5  # type: ignore
 
             async with semaphore.acquire_many(5):
-                assert semaphore._value == 0
+                assert semaphore._value == 0  # type: ignore
 
-            assert semaphore._value == 5
+            assert semaphore._value == 5  # type: ignore
 
-        assert semaphore._value == 10
+        assert semaphore._value == 10  # type: ignore
 
         with pytest.raises(ValueError):
             async with semaphore.acquire_many(0):
