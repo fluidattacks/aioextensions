@@ -3,16 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-<meta name="generator" content="pdoc 0.8.4" />
+<meta name="generator" content="pdoc 0.9.2" />
 <title>aioextensions API documentation</title>
 <meta name="description" content="High performance functions to work with the async IO …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
-<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
 <style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js" integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
 </head>
 <body>
@@ -24,19 +24,19 @@
 <section id="section-intro">
 <p>High performance functions to work with the async IO.</p>
 <p><a href="https://pypi.org/project/aioextensions"><img alt="Release" src="https://img.shields.io/pypi/v/aioextensions?color=success&amp;label=Release&amp;style=flat-square"></a>
-<a href="https://kamadorueda.github.io/aioextensions/"><img alt="Documentation" src="https://img.shields.io/badge/Documentation-click_here!-success?style=flat-square"></a>
+<a href="https://fluidattacks.github.io/aioextensions/"><img alt="Documentation" src="https://img.shields.io/badge/Documentation-click_here!-success?style=flat-square"></a>
 <a href="https://pypi.org/project/aioextensions"><img alt="Downloads" src="https://img.shields.io/pypi/dm/aioextensions?label=Downloads&amp;style=flat-square"></a>
 <a href="https://pypi.org/project/aioextensions"><img alt="Status" src="https://img.shields.io/pypi/status/aioextensions?label=Status&amp;style=flat-square"></a>
-<a href="https://kamadorueda.github.io/aioextensions/"><img alt="Coverage" src="https://img.shields.io/badge/Coverage-100%25-success?style=flat-square"></a>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md"><img alt="License" src="https://img.shields.io/pypi/l/aioextensions?color=success&amp;label=License&amp;style=flat-square"></a></p>
+<a href="https://fluidattacks.github.io/aioextensions/"><img alt="Coverage" src="https://img.shields.io/badge/Coverage-100%25-success?style=flat-square"></a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/LICENSE.md"><img alt="License" src="https://img.shields.io/pypi/l/aioextensions?color=success&amp;label=License&amp;style=flat-square"></a></p>
 <h1 id="rationale">Rationale</h1>
 <p>Modern services deal with a bunch of different tasks to perform:</p>
-<p><img alt="Latency comparison" src="https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/latency.png"></p>
+<p><img alt="Latency comparison" src="https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/latency.png"></p>
 <p>The important thing to note is that tasks can be categorized in two groups:</p>
 <h2 id="cpu-bound-tasks">CPU bound tasks</h2>
 <p>Those that happen inside the CPU, with very low latency and exploit the full
 potential of the hardware in the computer.</p>
-<p><img alt="Resources of an CPU bound task" src="https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_cpu_task.png"></p>
+<p><img alt="Resources of an CPU bound task" src="https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/resources_cpu_task.png"></p>
 <p>Examples of these tasks include:</p>
 <table>
 <thead>
@@ -68,7 +68,7 @@ potential of the hardware in the computer.</p>
 <p>Those that happen over a wire that transports data, with very high latencies
 and do not exploit the full potential of the hardware because the only thing to
 do is waiting until the data gets to the other end and comes back (round-trip).</p>
-<p><img alt="Resources of an IO bound task" src="https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_io_task.png"></p>
+<p><img alt="Resources of an IO bound task" src="https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/resources_io_task.png"></p>
 <p>Examples of these tasks include:</p>
 <table>
 <thead>
@@ -134,9 +134,9 @@ while the remaining ones are waiting the
 <p>The optimal way to perform CPU bound tasks is to send them to separate
 processses in order to bypass the <a href="https://realpython.com/python-gil">GIL</a>.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; from aioextensions import collect, in_process, run
+<pre><code class="language-python-repl">&gt;&gt;&gt; from aioextensions import collect, in_process, run
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; def cpu_bound_task(id: str):
+<pre><code class="language-python-repl">&gt;&gt;&gt; def cpu_bound_task(id: str):
         print(f'doing: {id}')
         # Imagine here something that uses a lot the CPU
         # For example: this complex mathematical operation
@@ -144,7 +144,7 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
         print(f'returning: {id}')
         return id
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; async def main():
+<pre><code class="language-python-repl">&gt;&gt;&gt; async def main():
         results = await collect([
             # in_process sends the task to a pool of processes
             in_process(cpu_bound_task, id)
@@ -153,7 +153,7 @@ processses in order to bypass the <a href="https://realpython.com/python-gil">GI
         ])
         print(f'results: {results}')
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; run(main())
+<pre><code class="language-python-repl">&gt;&gt;&gt; run(main())
 # I have 4 CPU cores in my machine
 doing: 0
 doing: 1
@@ -174,10 +174,10 @@ threads. This does not bypass the <a href="https://realpython.com/python-gil">GI
 However, threads will be in idle state most of the time, waiting high-latency
 operations to complete.</p>
 <h2 id="usage_1">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; from aioextensions import collect, in_thread, run
+<pre><code class="language-python-repl">&gt;&gt;&gt; from aioextensions import collect, in_thread, run
 &gt;&gt;&gt; from time import sleep, time
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; def io_bound_task(id: str):
+<pre><code class="language-python-repl">&gt;&gt;&gt; def io_bound_task(id: str):
         print(f'time: {time()}, doing: {id}')
         # Imagine here something with high latency
         # For example: a call to the database, or this sleep
@@ -185,7 +185,7 @@ operations to complete.</p>
         print(f'time: {time()}, returning: {id}')
         return id
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; async def main():
+<pre><code class="language-python-repl">&gt;&gt;&gt; async def main():
         results = await collect([
             # in_thread sends the task to a pool of threads
             in_thread(io_bound_task, id)
@@ -194,7 +194,7 @@ operations to complete.</p>
         ])
         print(f'time: {time()}, results: {results}')
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; run(main)
+<pre><code class="language-python-repl">&gt;&gt;&gt; run(main)
 time: 1597623831, doing: 0
 time: 1597623831, doing: 1
 time: 1597623831, doing: 2
@@ -224,7 +224,7 @@ $ pip install aioextensions[full]
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L895" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L0-L900" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;High performance functions to work with the async IO.
 
@@ -233,7 +233,7 @@ https://img.shields.io/pypi/v/aioextensions?color=success&amp;label=Release&amp;
 https://pypi.org/project/aioextensions)
 [![Documentation](
 https://img.shields.io/badge/Documentation-click_here!-success?style=flat-square)](
-https://kamadorueda.github.io/aioextensions/)
+https://fluidattacks.github.io/aioextensions/)
 [![Downloads](
 https://img.shields.io/pypi/dm/aioextensions?label=Downloads&amp;style=flat-square)](
 https://pypi.org/project/aioextensions)
@@ -242,17 +242,17 @@ https://img.shields.io/pypi/status/aioextensions?label=Status&amp;style=flat-squ
 https://pypi.org/project/aioextensions)
 [![Coverage](
 https://img.shields.io/badge/Coverage-100%25-success?style=flat-square)](
-https://kamadorueda.github.io/aioextensions/)
+https://fluidattacks.github.io/aioextensions/)
 [![License](
 https://img.shields.io/pypi/l/aioextensions?color=success&amp;label=License&amp;style=flat-square)](
-https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
+https://github.com/fluidattacks/aioextensions/blob/latest/LICENSE.md)
 
 # Rationale
 
 Modern services deal with a bunch of different tasks to perform:
 
 ![Latency comparison](
-https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/latency.png)
+https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/latency.png)
 
 The important thing to note is that tasks can be categorized in two groups:
 
@@ -262,7 +262,7 @@ Those that happen inside the CPU, with very low latency and exploit the full
 potential of the hardware in the computer.
 
 ![Resources of an CPU bound task](
-https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_cpu_task.png)
+https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/resources_cpu_task.png)
 
 Examples of these tasks include:
 
@@ -280,7 +280,7 @@ and do not exploit the full potential of the hardware because the only thing to
 do is waiting until the data gets to the other end and comes back (round-trip).
 
 ![Resources of an IO bound task](
-https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_io_task.png)
+https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/resources_io_task.png)
 
 Examples of these tasks include:
 
@@ -480,15 +480,16 @@ from typing import (
 try:
     # Attempt to install uvloop (optional dependency)
     import uvloop
+
     UVLOOP = uvloop
 except ImportError:
     UVLOOP = None
 
 # Constants
-F = TypeVar(&#39;F&#39;, bound=Callable[..., Any])  # pylint: disable=invalid-name
-S = TypeVar(&#39;S&#39;)  # pylint: disable=invalid-name
-T = TypeVar(&#39;T&#39;)  # pylint: disable=invalid-name
-Y = TypeVar(&#39;Y&#39;)  # pylint: disable=invalid-name
+F = TypeVar(&#34;F&#34;, bound=Callable[..., Any])  # pylint: disable=invalid-name
+S = TypeVar(&#34;S&#34;)  # pylint: disable=invalid-name
+T = TypeVar(&#34;T&#34;)  # pylint: disable=invalid-name
+Y = TypeVar(&#34;Y&#34;)  # pylint: disable=invalid-name
 
 # Linters
 # pylint: disable=unsubscriptable-object
@@ -544,7 +545,8 @@ async def in_thread(
     _ensure_thread_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
-        THREAD_POOL.pool, partial(function, *args, **kwargs),
+        THREAD_POOL.pool,
+        partial(function, *args, **kwargs),
     )
 
 
@@ -574,7 +576,8 @@ async def in_process(
     _ensure_process_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
-        PROCESS_POOL.pool, partial(function, *args, **kwargs),
+        PROCESS_POOL.pool,
+        partial(function, *args, **kwargs),
     )
 
 
@@ -631,11 +634,11 @@ def rate_limited(
     This decorator creates a `max_calls` sized data structure.
     &#34;&#34;&#34;
     if max_calls &lt; 1:
-        raise ValueError(&#39;max_calls must be &gt;= 1&#39;)
+        raise ValueError(&#34;max_calls must be &gt;= 1&#34;)
     if max_calls_period &lt;= 0:
-        raise ValueError(&#39;max_calls_period must be &gt; 0&#39;)
+        raise ValueError(&#34;max_calls_period must be &gt; 0&#34;)
     if min_seconds_between_calls &lt; 0:
-        raise ValueError(&#39;min_seconds_between_calls must be &gt;= 0&#39;)
+        raise ValueError(&#34;min_seconds_between_calls must be &gt;= 0&#34;)
 
     def decorator(function: F) -&gt; F:
         lock = None
@@ -742,14 +745,16 @@ async def collect(
     If awaitables is an instance of Sized (has `__len__` prototype).
     This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
-    return tuple([
-        await elem
-        for elem in resolve(
-            awaitables,
-            workers=workers,
-            worker_greediness=0,
-        )
-    ])
+    return tuple(
+        [
+            await elem
+            for elem in resolve(
+                awaitables,
+                workers=workers,
+                worker_greediness=0,
+            )
+        ]
+    )
 
 
 def resolve(  # noqa: mccabe
@@ -831,11 +836,11 @@ def resolve(  # noqa: mccabe
     This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     if workers &lt; 1:
-        raise ValueError(&#39;workers must be &gt;= 1&#39;)
+        raise ValueError(&#34;workers must be &gt;= 1&#34;)
     if worker_greediness &lt; 0:
-        raise ValueError(&#39;worker_greediness must be &gt;= 0&#39;)
+        raise ValueError(&#34;worker_greediness must be &gt;= 0&#34;)
 
-    if hasattr(awaitables, &#39;__len__&#39;):
+    if hasattr(awaitables, &#34;__len__&#34;):
         workers = min(workers, len(awaitables))  # type: ignore
 
     loop = asyncio.get_event_loop()
@@ -929,7 +934,7 @@ async def generate_in_thread(
 
     def gen_next(val: S) -&gt; Y:
         with suppress(StopIteration):
-            return gen.send(val) if hasattr(gen, &#39;send&#39;) else next(gen)
+            return gen.send(val) if hasattr(gen, &#34;send&#34;) else next(gen)
         raise StopAsyncIteration()
 
     while True:
@@ -943,7 +948,7 @@ def schedule(
     awaitable: Awaitable[T],
     *,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -&gt; &#39;Awaitable[asyncio.Future[T]]&#39;:
+) -&gt; &#34;Awaitable[asyncio.Future[T]]&#34;:
     &#34;&#34;&#34;Schedule an awaitable in the event loop and return a wrapper for it.
 
     Usage:
@@ -1003,7 +1008,7 @@ class Semaphore(asyncio.Semaphore):
 
         &#34;&#34;&#34;
         if times &lt;= 0:
-            raise ValueError(&#39;times must be &gt;= 1&#39;)
+            raise ValueError(&#34;times must be &gt;= 1&#34;)
 
         try:
             await collect([self.acquire() for _ in range(times)])
@@ -1033,6 +1038,7 @@ class ExecutorPool:
     The actual pool is created at `initialization` time
     and it is empty until that.
     &#34;&#34;&#34;
+
     def __init__(
         self,
         cls: Union[
@@ -1055,8 +1061,7 @@ class ExecutorPool:
         self._pool = self._cls(max_workers=max_workers)
 
     def shutdown(self, *, wait: bool) -&gt; None:
-        &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.&#34;&#34;&#34;
         if self._pool is not None:
             self._pool.shutdown(wait=wait)
             self._pool = None
@@ -1065,7 +1070,7 @@ class ExecutorPool:
     def pool(self) -&gt; Executor:
         &#34;&#34;&#34;Low level pool of workers held by the executor, may be None.&#34;&#34;&#34;
         if self._pool is None:
-            raise RuntimeError(&#39;Must call initialize first&#39;)
+            raise RuntimeError(&#34;Must call initialize first&#34;)
 
         return self._pool
 
@@ -1158,13 +1163,13 @@ or never launched otherwise.</p></div>
 <dd>
 <div class="desc"><p>Execute an asynchronous function synchronously and return its result.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; async def do(a, b=0):
+<pre><code class="language-python-repl">&gt;&gt;&gt; async def do(a, b=0):
         await something
         return a + b
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; run(do(1, b=2))
+<pre><code class="language-python-repl">&gt;&gt;&gt; run(do(1, b=2))
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; 3
+<pre><code class="language-python-repl">&gt;&gt;&gt; 3
 </code></pre>
 <p>This function acts as a drop-in replacement of asyncio.run and
 installs <code>uvloop</code> (the fastest event-loop implementation out there) if
@@ -1176,7 +1181,7 @@ available.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L269-L292" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L270-L293" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run(coroutine: Awaitable[T], *, debug: bool = False) -&gt; T:
     &#34;&#34;&#34;Execute an asynchronous function synchronously and return its result.
@@ -1223,7 +1228,7 @@ limitations that the <a href="https://realpython.com/python-gil">GIL</a> imposes
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L295-L320" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L296-L322" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def in_thread(
     function: Callable[..., T],
@@ -1249,7 +1254,8 @@ limitations that the <a href="https://realpython.com/python-gil">GIL</a> imposes
     _ensure_thread_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
-        THREAD_POOL.pool, partial(function, *args, **kwargs),
+        THREAD_POOL.pool,
+        partial(function, *args, **kwargs),
     )</code></pre>
 </details>
 </dd>
@@ -1274,7 +1280,7 @@ expense.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L323-L350" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L325-L353" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def in_process(
     function: Callable[..., T],
@@ -1302,7 +1308,8 @@ expense.</p>
     _ensure_process_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
-        PROCESS_POOL.pool, partial(function, *args, **kwargs),
+        PROCESS_POOL.pool,
+        partial(function, *args, **kwargs),
     )</code></pre>
 </details>
 </dd>
@@ -1318,7 +1325,7 @@ FIFO mode.</p>
 faster than <code>min_seconds_between_calls</code> seconds.</p>
 <h2 id="usage">Usage</h2>
 <p>If you want to perform at most 2 calls to a database per second:</p>
-<pre><code class="language-python">&gt;&gt;&gt; @rate_limited(
+<pre><code class="language-python-repl">&gt;&gt;&gt; @rate_limited(
         max_calls=2,
         max_calls_period=1,
         min_seconds_between_calls=0.2,
@@ -1327,7 +1334,7 @@ faster than <code>min_seconds_between_calls</code> seconds.</p>
         await something
         print(f'time: {time()}, doing: {n}')
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; await collect(map(query, range(10)))
+<pre><code class="language-python-repl">&gt;&gt;&gt; await collect(map(query, range(10)))
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>time: 1597706698.0, doing: 0
@@ -1351,7 +1358,7 @@ instance, lower your bill in DynamoDB or prevent a cooldown period
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L353-L446" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L356-L449" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def rate_limited(
     *,
@@ -1406,11 +1413,11 @@ instance, lower your bill in DynamoDB or prevent a cooldown period
     This decorator creates a `max_calls` sized data structure.
     &#34;&#34;&#34;
     if max_calls &lt; 1:
-        raise ValueError(&#39;max_calls must be &gt;= 1&#39;)
+        raise ValueError(&#34;max_calls must be &gt;= 1&#34;)
     if max_calls_period &lt;= 0:
-        raise ValueError(&#39;max_calls_period must be &gt; 0&#39;)
+        raise ValueError(&#34;max_calls_period must be &gt; 0&#34;)
     if min_seconds_between_calls &lt; 0:
-        raise ValueError(&#39;min_seconds_between_calls must be &gt;= 0&#39;)
+        raise ValueError(&#34;min_seconds_between_calls must be &gt;= 0&#34;)
 
     def decorator(function: F) -&gt; F:
         lock = None
@@ -1471,17 +1478,17 @@ the input stream.</dd>
 <p>A tuple with the results of executing each awaitable in the event loop.
 Results are returned in the same order of the input stream.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; async def do(n):
+<pre><code class="language-python-repl">&gt;&gt;&gt; async def do(n):
         print(f'running: {n}')
         await sleep(1)
         print(f'returning: {n}')
         return n
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; iterable = map(do, range(5))
+<pre><code class="language-python-repl">&gt;&gt;&gt; iterable = map(do, range(5))
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; results = await collect(iterable, workers=2)
+<pre><code class="language-python-repl">&gt;&gt;&gt; results = await collect(iterable, workers=2)
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; print(f'results: {results}')
+<pre><code class="language-python-repl">&gt;&gt;&gt; print(f'results: {results}')
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>running: 0
@@ -1516,7 +1523,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L449-L524" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L452-L529" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def collect(
     awaitables: Iterable[Awaitable[T]],
@@ -1586,14 +1593,16 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
     If awaitables is an instance of Sized (has `__len__` prototype).
     This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
-    return tuple([
-        await elem
-        for elem in resolve(
-            awaitables,
-            workers=workers,
-            worker_greediness=0,
-        )
-    ])</code></pre>
+    return tuple(
+        [
+            await elem
+            for elem in resolve(
+                awaitables,
+                workers=workers,
+                worker_greediness=0,
+            )
+        ]
+    )</code></pre>
 </details>
 </dd>
 <dt id="aioextensions.resolve"><code class="name flex">
@@ -1622,15 +1631,15 @@ in order to upper-bound memory usage throughout the execution.</dd>
 <p>A future with the result of the next ready task. Futures are yielded in
 the same order of the input stream.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; async def do(n):
+<pre><code class="language-python-repl">&gt;&gt;&gt; async def do(n):
         print(f'running: {n}')
         await asyncio.sleep(1)
         print(f'returning: {n}')
         return n
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; iterable = map(do, range(5))
+<pre><code class="language-python-repl">&gt;&gt;&gt; iterable = map(do, range(5))
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; for next in resolve(iterable, workers=2):
+<pre><code class="language-python-repl">&gt;&gt;&gt; for next in resolve(iterable, workers=2):
         try:
             print(f'got resolved result: {await next}')
         except:
@@ -1673,7 +1682,7 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L527-L648" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L532-L653" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def resolve(  # noqa: mccabe
     awaitables: Iterable[Awaitable[T]],
@@ -1754,11 +1763,11 @@ This function will launch at most <code>len(awaitables)</code> workers.</p></div
     This function will launch at most `len(awaitables)` workers.
     &#34;&#34;&#34;
     if workers &lt; 1:
-        raise ValueError(&#39;workers must be &gt;= 1&#39;)
+        raise ValueError(&#34;workers must be &gt;= 1&#34;)
     if worker_greediness &lt; 0:
-        raise ValueError(&#39;worker_greediness must be &gt;= 0&#39;)
+        raise ValueError(&#34;worker_greediness must be &gt;= 0&#34;)
 
-    if hasattr(awaitables, &#39;__len__&#39;):
+    if hasattr(awaitables, &#34;__len__&#34;):
         workers = min(workers, len(awaitables))  # type: ignore
 
     loop = asyncio.get_event_loop()
@@ -1809,12 +1818,12 @@ yield control back to the event-loop until the next cycle.</p>
 <p>Can be seen as a forceful switch of control between threads.
 Useful for cooperative initialization.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; await forceforce_loop_cycle()
+<pre><code class="language-python-repl">&gt;&gt;&gt; await forceforce_loop_cycle()
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L651-L665" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L656-L670" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def force_loop_cycle() -&gt; None:
     &#34;&#34;&#34;Force the event loop to perform one cycle.
@@ -1841,9 +1850,9 @@ Useful for cooperative initialization.</p>
 <p>Note that <code>generator_func(*args, **kwargs)</code> may return a generator or an
 interator and both cases are handled rightfully.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; from os import scandir
+<pre><code class="language-python-repl">&gt;&gt;&gt; from os import scandir
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; async for entry in generate_in_thread(scandir, '.'):
+<pre><code class="language-python-repl">&gt;&gt;&gt; async for entry in generate_in_thread(scandir, '.'):
         print(entry.name)
 </code></pre>
 <h2 id="output">Output</h2>
@@ -1859,7 +1868,7 @@ For instance, in a web server.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L668-L711" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L673-L716" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">async def generate_in_thread(
     generator_func: Callable[..., Generator[Y, S, None]],
@@ -1897,7 +1906,7 @@ For instance, in a web server.</p></div>
 
     def gen_next(val: S) -&gt; Y:
         with suppress(StopIteration):
-            return gen.send(val) if hasattr(gen, &#39;send&#39;) else next(gen)
+            return gen.send(val) if hasattr(gen, &#34;send&#34;) else next(gen)
         raise StopAsyncIteration()
 
     while True:
@@ -1908,23 +1917,23 @@ For instance, in a web server.</p></div>
 </details>
 </dd>
 <dt id="aioextensions.schedule"><code class="name flex">
-<span>def <span class="ident">schedule</span></span>(<span>awaitable: Awaitable[~T], *, loop: Union[asyncio.events.AbstractEventLoop, NoneType] = None) ‑> 'Awaitable[asyncio.Future[T]]'</span>
+<span>def <span class="ident">schedule</span></span>(<span>awaitable: Awaitable[~T], *, loop: Union[asyncio.events.AbstractEventLoop, NoneType] = None) ‑> Awaitable[asyncio.Future[T]]</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Schedule an awaitable in the event loop and return a wrapper for it.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; async def do(n):
+<pre><code class="language-python-repl">&gt;&gt;&gt; async def do(n):
         print(f'running: {n}')
         await sleep(1)
         print(f'returning: {n}')
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
+<pre><code class="language-python-repl">&gt;&gt;&gt; task = schedule(do(3))  # Task is executing in the background now
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; print('other work is being done here')
+<pre><code class="language-python-repl">&gt;&gt;&gt; print('other work is being done here')
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; task_result = await task  # Wait until the task is ready
+<pre><code class="language-python-repl">&gt;&gt;&gt; task_result = await task  # Wait until the task is ready
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; print(f'result: {task_result.result()}')  # may rise if do() raised
+<pre><code class="language-python-repl">&gt;&gt;&gt; print(f'result: {task_result.result()}')  # may rise if do() raised
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>other work is being done here
@@ -1940,13 +1949,13 @@ the moment result() is called and never otherwise.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L714-L760" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L719-L765" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def schedule(
     awaitable: Awaitable[T],
     *,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -&gt; &#39;Awaitable[asyncio.Future[T]]&#39;:
+) -&gt; &#34;Awaitable[asyncio.Future[T]]&#34;:
     &#34;&#34;&#34;Schedule an awaitable in the event loop and return a wrapper for it.
 
     Usage:
@@ -1997,11 +2006,11 @@ the moment result() is called and never otherwise.</p></div>
 <dd>
 <div class="desc"><p>Decorator to turn an asynchronous function into a synchronous one.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; @run_decorator
+<pre><code class="language-python-repl">&gt;&gt;&gt; @run_decorator
     async def do(a, b=0):
         return a + b
 </code></pre>
-<pre><code class="language-python">&gt;&gt;&gt; do(1, b=2)
+<pre><code class="language-python-repl">&gt;&gt;&gt; do(1, b=2)
 </code></pre>
 <h2 id="output">Output</h2>
 <pre><code>3
@@ -2011,7 +2020,7 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L850-L873" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L855-L878" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def run_decorator(function: F) -&gt; F:
     &#34;&#34;&#34;Decorator to turn an asynchronous function into a synchronous one.
@@ -2053,7 +2062,7 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L763-L785" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L768-L790" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class Semaphore(asyncio.Semaphore):
     &#34;&#34;&#34;Same as `asyncio.Semaphore` plus some useful methods.&#34;&#34;&#34;
@@ -2070,7 +2079,7 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 
         &#34;&#34;&#34;
         if times &lt;= 0:
-            raise ValueError(&#39;times must be &gt;= 1&#39;)
+            raise ValueError(&#34;times must be &gt;= 1&#34;)
 
         try:
             await collect([self.acquire() for _ in range(times)])
@@ -2096,14 +2105,14 @@ We use it mostly in tests for its convenience over pytest-asyncio plugin.</p></d
 <dd>
 <div class="desc"><p>Acquire a semaphore many times, and release on exit.</p>
 <h2 id="usage">Usage</h2>
-<pre><code class="language-python">&gt;&gt;&gt; async with semaphore.acquire_many(5):
+<pre><code class="language-python-repl">&gt;&gt;&gt; async with semaphore.acquire_many(5):
         # Work with shared resource
         ...
 </code></pre></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L766-L785" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L771-L790" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@asynccontextmanager
 async def acquire_many(self, times: int) -&gt; AsyncIterator[None]:
@@ -2117,7 +2126,7 @@ async def acquire_many(self, times: int) -&gt; AsyncIterator[None]:
 
     &#34;&#34;&#34;
     if times &lt;= 0:
-        raise ValueError(&#39;times must be &gt;= 1&#39;)
+        raise ValueError(&#34;times must be &gt;= 1&#34;)
 
     try:
         await collect([self.acquire() for _ in range(times)])
@@ -2138,7 +2147,7 @@ async def acquire_many(self, times: int) -&gt; AsyncIterator[None]:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L788-L789" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L793-L794" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class BoundedSemaphore(Semaphore, asyncio.BoundedSemaphore):
     &#34;&#34;&#34;Same as `asyncio.BoundedSemaphore` plus some useful methods.&#34;&#34;&#34;</code></pre>
@@ -2170,7 +2179,7 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L802-L847" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L807-L852" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">class ExecutorPool:
     &#34;&#34;&#34;Object representing a pool of Processes or Threads.
@@ -2178,6 +2187,7 @@ and it is empty until that.</p></div>
     The actual pool is created at `initialization` time
     and it is empty until that.
     &#34;&#34;&#34;
+
     def __init__(
         self,
         cls: Union[
@@ -2200,8 +2210,7 @@ and it is empty until that.</p></div>
         self._pool = self._cls(max_workers=max_workers)
 
     def shutdown(self, *, wait: bool) -&gt; None:
-        &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
-        &#34;&#34;&#34;
+        &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.&#34;&#34;&#34;
         if self._pool is not None:
             self._pool.shutdown(wait=wait)
             self._pool = None
@@ -2210,7 +2219,7 @@ and it is empty until that.</p></div>
     def pool(self) -&gt; Executor:
         &#34;&#34;&#34;Low level pool of workers held by the executor, may be None.&#34;&#34;&#34;
         if self._pool is None:
-            raise RuntimeError(&#39;Must call initialize first&#39;)
+            raise RuntimeError(&#34;Must call initialize first&#34;)
 
         return self._pool
 
@@ -2227,13 +2236,13 @@ and it is empty until that.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L836-L842" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L841-L847" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def pool(self) -&gt; Executor:
     &#34;&#34;&#34;Low level pool of workers held by the executor, may be None.&#34;&#34;&#34;
     if self._pool is None:
-        raise RuntimeError(&#39;Must call initialize first&#39;)
+        raise RuntimeError(&#34;Must call initialize first&#34;)
 
     return self._pool</code></pre>
 </details>
@@ -2244,7 +2253,7 @@ def pool(self) -&gt; Executor:
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L844-L847" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L849-L852" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">@property
 def initialized(self) -&gt; bool:
@@ -2265,7 +2274,7 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L818-L827" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L824-L833" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def initialize(self, *, max_workers: Optional[int] = None) -&gt; None:
     &#34;&#34;&#34;Initialize the executor with a cap of at most `max_workers`.
@@ -2287,11 +2296,10 @@ if never needed.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
-<a href="https://github.com/kamadorueda/aioextensions/blob/latest/src/aioextensions/__init__.py#L829-L834" class="git-link">Browse git</a>
+<a href="https://github.com/fluidattacks/aioextensions/blob/latest/src/aioextensions/__init__.py#L835-L839" class="git-link">Browse git</a>
 </summary>
 <pre><code class="python">def shutdown(self, *, wait: bool) -&gt; None:
-    &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Shut down the executor and (optionally) waits for workers to finish.&#34;&#34;&#34;
     if self._pool is not None:
         self._pool.shutdown(wait=wait)
         self._pool = None</code></pre>
@@ -2369,7 +2377,7 @@ if never needed.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.8.4</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
 </footer>
 </body>
 </html>

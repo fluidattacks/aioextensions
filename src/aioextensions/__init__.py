@@ -5,7 +5,7 @@ https://img.shields.io/pypi/v/aioextensions?color=success&label=Release&style=fl
 https://pypi.org/project/aioextensions)
 [![Documentation](
 https://img.shields.io/badge/Documentation-click_here!-success?style=flat-square)](
-https://kamadorueda.github.io/aioextensions/)
+https://fluidattacks.github.io/aioextensions/)
 [![Downloads](
 https://img.shields.io/pypi/dm/aioextensions?label=Downloads&style=flat-square)](
 https://pypi.org/project/aioextensions)
@@ -14,17 +14,17 @@ https://img.shields.io/pypi/status/aioextensions?label=Status&style=flat-square)
 https://pypi.org/project/aioextensions)
 [![Coverage](
 https://img.shields.io/badge/Coverage-100%25-success?style=flat-square)](
-https://kamadorueda.github.io/aioextensions/)
+https://fluidattacks.github.io/aioextensions/)
 [![License](
 https://img.shields.io/pypi/l/aioextensions?color=success&label=License&style=flat-square)](
-https://github.com/kamadorueda/aioextensions/blob/latest/LICENSE.md)
+https://github.com/fluidattacks/aioextensions/blob/latest/LICENSE.md)
 
 # Rationale
 
 Modern services deal with a bunch of different tasks to perform:
 
 ![Latency comparison](
-https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/latency.png)
+https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/latency.png)
 
 The important thing to note is that tasks can be categorized in two groups:
 
@@ -34,7 +34,7 @@ Those that happen inside the CPU, with very low latency and exploit the full
 potential of the hardware in the computer.
 
 ![Resources of an CPU bound task](
-https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_cpu_task.png)
+https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/resources_cpu_task.png)
 
 Examples of these tasks include:
 
@@ -52,7 +52,7 @@ and do not exploit the full potential of the hardware because the only thing to
 do is waiting until the data gets to the other end and comes back (round-trip).
 
 ![Resources of an IO bound task](
-https://raw.githubusercontent.com/kamadorueda/aioextensions/latest/docs/static/resources_io_task.png)
+https://raw.githubusercontent.com/fluidattacks/aioextensions/latest/docs/static/resources_io_task.png)
 
 Examples of these tasks include:
 
@@ -252,15 +252,16 @@ from typing import (
 try:
     # Attempt to install uvloop (optional dependency)
     import uvloop
+
     UVLOOP = uvloop
 except ImportError:
     UVLOOP = None
 
 # Constants
-F = TypeVar('F', bound=Callable[..., Any])  # pylint: disable=invalid-name
-S = TypeVar('S')  # pylint: disable=invalid-name
-T = TypeVar('T')  # pylint: disable=invalid-name
-Y = TypeVar('Y')  # pylint: disable=invalid-name
+F = TypeVar("F", bound=Callable[..., Any])  # pylint: disable=invalid-name
+S = TypeVar("S")  # pylint: disable=invalid-name
+T = TypeVar("T")  # pylint: disable=invalid-name
+Y = TypeVar("Y")  # pylint: disable=invalid-name
 
 # Linters
 # pylint: disable=unsubscriptable-object
@@ -316,7 +317,8 @@ async def in_thread(
     _ensure_thread_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
-        THREAD_POOL.pool, partial(function, *args, **kwargs),
+        THREAD_POOL.pool,
+        partial(function, *args, **kwargs),
     )
 
 
@@ -346,7 +348,8 @@ async def in_process(
     _ensure_process_pool_is_initialized()
 
     return await asyncio.get_running_loop().run_in_executor(
-        PROCESS_POOL.pool, partial(function, *args, **kwargs),
+        PROCESS_POOL.pool,
+        partial(function, *args, **kwargs),
     )
 
 
@@ -403,11 +406,11 @@ def rate_limited(
     This decorator creates a `max_calls` sized data structure.
     """
     if max_calls < 1:
-        raise ValueError('max_calls must be >= 1')
+        raise ValueError("max_calls must be >= 1")
     if max_calls_period <= 0:
-        raise ValueError('max_calls_period must be > 0')
+        raise ValueError("max_calls_period must be > 0")
     if min_seconds_between_calls < 0:
-        raise ValueError('min_seconds_between_calls must be >= 0')
+        raise ValueError("min_seconds_between_calls must be >= 0")
 
     def decorator(function: F) -> F:
         lock = None
@@ -514,14 +517,16 @@ async def collect(
     If awaitables is an instance of Sized (has `__len__` prototype).
     This function will launch at most `len(awaitables)` workers.
     """
-    return tuple([
-        await elem
-        for elem in resolve(
-            awaitables,
-            workers=workers,
-            worker_greediness=0,
-        )
-    ])
+    return tuple(
+        [
+            await elem
+            for elem in resolve(
+                awaitables,
+                workers=workers,
+                worker_greediness=0,
+            )
+        ]
+    )
 
 
 def resolve(  # noqa: mccabe
@@ -603,11 +608,11 @@ def resolve(  # noqa: mccabe
     This function will launch at most `len(awaitables)` workers.
     """
     if workers < 1:
-        raise ValueError('workers must be >= 1')
+        raise ValueError("workers must be >= 1")
     if worker_greediness < 0:
-        raise ValueError('worker_greediness must be >= 0')
+        raise ValueError("worker_greediness must be >= 0")
 
-    if hasattr(awaitables, '__len__'):
+    if hasattr(awaitables, "__len__"):
         workers = min(workers, len(awaitables))  # type: ignore
 
     loop = asyncio.get_event_loop()
@@ -701,7 +706,7 @@ async def generate_in_thread(
 
     def gen_next(val: S) -> Y:
         with suppress(StopIteration):
-            return gen.send(val) if hasattr(gen, 'send') else next(gen)
+            return gen.send(val) if hasattr(gen, "send") else next(gen)
         raise StopAsyncIteration()
 
     while True:
@@ -715,7 +720,7 @@ def schedule(
     awaitable: Awaitable[T],
     *,
     loop: Optional[asyncio.AbstractEventLoop] = None,
-) -> 'Awaitable[asyncio.Future[T]]':
+) -> "Awaitable[asyncio.Future[T]]":
     """Schedule an awaitable in the event loop and return a wrapper for it.
 
     Usage:
@@ -775,7 +780,7 @@ class Semaphore(asyncio.Semaphore):
 
         """
         if times <= 0:
-            raise ValueError('times must be >= 1')
+            raise ValueError("times must be >= 1")
 
         try:
             await collect([self.acquire() for _ in range(times)])
@@ -805,6 +810,7 @@ class ExecutorPool:
     The actual pool is created at `initialization` time
     and it is empty until that.
     """
+
     def __init__(
         self,
         cls: Union[
@@ -827,8 +833,7 @@ class ExecutorPool:
         self._pool = self._cls(max_workers=max_workers)
 
     def shutdown(self, *, wait: bool) -> None:
-        """Shut down the executor and (optionally) waits for workers to finish.
-        """
+        """Shut down the executor and (optionally) waits for workers to finish."""
         if self._pool is not None:
             self._pool.shutdown(wait=wait)
             self._pool = None
@@ -837,7 +842,7 @@ class ExecutorPool:
     def pool(self) -> Executor:
         """Low level pool of workers held by the executor, may be None."""
         if self._pool is None:
-            raise RuntimeError('Must call initialize first')
+            raise RuntimeError("Must call initialize first")
 
         return self._pool
 
