@@ -15,8 +15,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 description = "High performance functions to work with the async IO"
-documentation = "https://kamadorueda.github.io/aioextensions"
-homepage = "https://kamadorueda.github.io/aioextensions"
+documentation = "https://fluidattacks.github.io/aioextensions"
+homepage = "https://fluidattacks.github.io/aioextensions"
 include = [
   "test/**/*",
 ]
@@ -26,7 +26,7 @@ packages = [
   { include = "aioextensions", from = "src" },
 ]
 readme = "./README.md"
-repository = "https://github.com/kamadorueda/aioextensions"
+repository = "https://github.com/fluidattacks/aioextensions"
 version = "1.0.0"
 
 [tool.poetry.dependencies]
@@ -47,4 +47,4 @@ pytest-cov = "2.10.0"
 full = ["uvloop"]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/kamadorueda/aioextensions/issues"
+"Bug Tracker" = "https://github.com/fluidattacks/aioextensions/issues"
